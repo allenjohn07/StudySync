@@ -101,6 +101,7 @@ To shut down, press `Ctrl+C` in each tab. Your sessions stay in `backend/studysy
 | `FFMPEG_BIN` | `ffmpeg` | ffmpeg command |
 | `OLLAMA_URL` | `http://localhost:11434` | Ollama server |
 | `OLLAMA_MODEL` | `llama3.2:3b` | Model used for summaries |
+| `OLLAMA_TIMEOUT_MS` | `90000` | How long to wait for Ollama before the summary is marked as failed |
 
 Quality too low, or too slow? Swap models without touching code: another Whisper model (`tiny.en` is
 faster but less accurate, `medium.en` is more accurate but slower) via `WHISPER_MODEL_PATH`, or a larger Ollama model via `OLLAMA_MODEL` (needs more memory).
@@ -115,6 +116,7 @@ All routes are under `/api` except the health check.
 | `POST /api/lessons` | Start a session, returns `{ id }` |
 | `POST /api/lessons/:id/chunks` | Send one audio piece (multipart: `audio`, `seq`, `start`) |
 | `POST /api/lessons/:id/finish` | Stop recording and write the summary |
+| `POST /api/lessons/:id/resummarize` | Write the summary again from the saved transcript (after a failure, or if it is stuck) |
 | `GET /api/lessons` | List sessions, newest first |
 | `GET /api/lessons/:id` | One session: status, transcript lines, summary |
 | `DELETE /api/lessons/:id` | Delete a finished session (409 while it is recording or processing) |
@@ -163,6 +165,7 @@ SELECT lesson_id, seq, start_sec, text FROM segments ORDER BY lesson_id, seq;
 | "Could not run ffmpeg" or "Could not run whisper-cli" | The tool isn't installed or not on your `PATH`. Check `ffmpeg -version` and `whisper-cli --help` |
 | Error about the model file | `backend/models/ggml-small.en.bin` is missing: redo the speech model download |
 | "Ollama returned…" or "fetch failed" | Ollama isn't running: start `ollama serve` |
+| Stuck on "Summarizing…" | Ollama is busy or stalled. After 90 s the summary fails; press **Summarize again** (or **Try again** if it is taking long) |
 | "Couldn't reach the backend" | Backend isn't running on port 4000 |
 | "No speech was detected" | Whisper heard nothing: check that the right microphone is selected |
 | Phone shows "listening" | macOS picked your iPhone as the microphone (Continuity). Switch the input to your Mac in System Settings → Sound |

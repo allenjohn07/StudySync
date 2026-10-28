@@ -35,6 +35,15 @@ export function useDeleteLesson() {
   });
 }
 
+export function useResummarize() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: lessonsApi.resummarize,
+    // Refresh right away so the page shows "Summarizing…" again and polling resumes.
+    onSuccess: (_data, id) => queryClient.invalidateQueries({ queryKey: ["lessons", id] }),
+  });
+}
+
 export function useClearLessons() {
   const queryClient = useQueryClient();
   return useMutation({

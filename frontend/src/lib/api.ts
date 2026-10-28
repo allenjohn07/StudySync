@@ -56,6 +56,8 @@ export const lessonsApi = {
     return request<ChunkResult>(`/lessons/${id}/chunks`, { method: "POST", body: form });
   },
   finish: (id: number) => post<{ ok: true }>(`/lessons/${id}/finish`),
+  // Write the summary again from the saved transcript (after a failure, or when it seems stuck).
+  resummarize: (id: number) => post<{ ok: true }>(`/lessons/${id}/resummarize`),
   get: (id: number) => request<Lesson>(`/lessons/${id}`),
   list: () => request<Lesson[]>("/lessons"),
   clear: () => request<{ deleted: number }>("/lessons", { method: "DELETE" }),

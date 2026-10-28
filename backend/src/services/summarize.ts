@@ -71,12 +71,16 @@ function exampleMessages(friday: string) {
   ];
 }
 
-async function callOllama(transcript: string): Promise<unknown> {
+// Without a limit, one stalled call would block every later job (the queue runs one at a time).
+const OLLAMA_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS ?? 90_000);
+
+async function callOllama(transcript: string, signal?: AbortSignal): Promise<unknown> {
   const calendar = upcomingDays();
   const friday = calendar.slice(1).find((d) => d.startsWith("Friday"))?.split(" ")[1] ?? null;
   const res = await fetch(`${process.env.OLLAMA_URL ?? "http://localhost:11434"}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    signal: AbortSignal.any([AbortSignal.timeout(OLLAMA_TIMEOUT_MS), ...(signal ? [signal] : [])]),
     body: JSON.stringify({
       model: process.env.OLLAMA_MODEL ?? "llama3.2:3b",
       stream: false,
@@ -113,19 +117,26 @@ async function callOllama(transcript: string): Promise<unknown> {
   return JSON.parse(body.message?.content ?? "");
 }
 
-export async function summarize(transcript: string): Promise<Summary> {
+/** `signal` lets the caller cancel a summary that is no longer wanted (e.g. the user pressed "Try again"). */
+export async function summarize(transcript: string, signal?: AbortSignal): Promise<Summary> {
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const summary = summarySchema.parse(await callOllama(transcript));
+      const summary = summarySchema.parse(await callOllama(transcript, signal));
       // A real sentence should always yield something; an all-empty answer is the model giving up, so retry.
       if (wordCount(transcript) >= 3 && !summary.topics.length && !summary.keyPoints.length) {
         throw new Error("The model returned no topics or key points");
       }
       return summary;
     } catch (err) {
+      if (signal?.aborted) throw err; // cancelled on purpose: do not retry
       lastError = err;
+      // A timeout means Ollama is stuck or overloaded; asking again straight away rarely helps.
+      if (err instanceof Error && err.name === "TimeoutError") break;
     }
+  }
+  if (lastError instanceof Error && lastError.name === "TimeoutError") {
+    throw new Error(`Ollama took longer than ${Math.round(OLLAMA_TIMEOUT_MS / 1000)} seconds to answer. It may be busy or stuck.`);
   }
   throw new Error(`Could not get a valid summary from Ollama: ${lastError instanceof Error ? lastError.message : lastError}`);
 }

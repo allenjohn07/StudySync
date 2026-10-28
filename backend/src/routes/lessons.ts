@@ -110,7 +110,22 @@ async function transcribeChunk(
   }
 }
 
-async function summarizeLesson(id: number) {
+// The current summary job of each lesson. A newer job (a retry) cancels the older one, and only the newest
+// is allowed to write its result, so a cancelled job can never overwrite a retry.
+interface Run {
+  controller: AbortController;
+}
+const runs = new Map<number, Run>();
+
+function startRun(id: number): Run {
+  runs.get(id)?.controller.abort();
+  const run = { controller: new AbortController() };
+  runs.set(id, run);
+  return run;
+}
+
+async function summarizeLesson(id: number, run: Run) {
+  const isCurrent = () => runs.get(id) === run;
   try {
     const transcript = findSegments(id)
       .map((s) => s.text)
@@ -118,15 +133,19 @@ async function summarizeLesson(id: number) {
     if (!transcript) throw new Error(findLesson(id)?.error ?? "No speech was detected in the recording");
 
     db.prepare("UPDATE lessons SET transcript = ?, stage = 'summarizing' WHERE id = ?").run(transcript, id);
-    const summary = await summarize(transcript);
+    const summary = await summarize(transcript, run.controller.signal);
+    if (!isCurrent()) return;
 
     db.prepare(
       "UPDATE lessons SET summary = ?, title = ?, status = 'done', stage = NULL, error = NULL WHERE id = ?"
     ).run(JSON.stringify(summary), titleFromSummary(summary.topics), id);
   } catch (err) {
+    if (!isCurrent()) return;
     const message = err instanceof Error ? err.message : String(err);
     console.error(`Lesson ${id} failed:`, message);
     db.prepare("UPDATE lessons SET status = 'error', stage = NULL, error = ? WHERE id = ?").run(message, id);
+  } finally {
+    if (isCurrent()) runs.delete(id);
   }
 }
 
@@ -170,7 +189,23 @@ lessons.post("/:id/finish", (c) => {
   if (lesson.status !== "recording") return c.json({ error: "Lesson already finished" }, 409);
 
   db.prepare("UPDATE lessons SET status = 'processing', stage = 'transcribing' WHERE id = ?").run(id);
-  enqueue(() => summarizeLesson(id));
+  const run = startRun(id);
+  enqueue(() => summarizeLesson(id, run));
+  return c.json({ ok: true });
+});
+
+// Write the summary again from the saved transcript: for a failed summary, or one that is stuck.
+lessons.post("/:id/resummarize", (c) => {
+  const id = Number(c.req.param("id"));
+  const lesson = findLesson(id);
+  if (!lesson) return c.json({ error: "Lesson not found" }, 404);
+  const stuck = lesson.status === "processing" && lesson.stage === "summarizing";
+  if (lesson.status !== "error" && !stuck) return c.json({ error: "Nothing to retry for this session" }, 409);
+  if (findSegments(id).length === 0) return c.json({ error: "Nothing was transcribed in this session" }, 409);
+
+  db.prepare("UPDATE lessons SET status = 'processing', stage = 'summarizing', error = NULL WHERE id = ?").run(id);
+  const run = startRun(id); // cancels a stuck attempt so it stops blocking the queue
+  enqueue(() => summarizeLesson(id, run));
   return c.json({ ok: true });
 });
 

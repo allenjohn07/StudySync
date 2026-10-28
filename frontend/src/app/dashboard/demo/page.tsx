@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ChevronRight, Check } from "lucide-react";
+import { AlertCircle, ChevronRight, Check, RotateCw } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { ScrollFade } from "@/components/scroll-fade";
 import { SessionsSidebar } from "@/components/sessions-sidebar";
@@ -26,12 +26,16 @@ import {
   useFinishLesson,
   useLesson,
   useLessons,
+  useResummarize,
 } from "@/hooks/use-lessons";
 import { useLocalAuth } from "@/hooks/use-local-auth";
 import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { WritingText } from "@/components/ui/writing-text";
 import { ShimmeringText } from "@/components/ui/shimmering-text";
+
+// How long a summary may run before "Try again" is offered (it normally takes well under half a minute).
+const SLOW_SUMMARY_MS = 40_000;
 
 // Two Control taps closer together than this count as a double tap.
 const HOTKEY_WINDOW_MS = 400;
@@ -46,6 +50,36 @@ function errorMessage(err: unknown) {
     : "Couldn't reach the backend. Is it running on port 4000?";
 }
 
+/** Shown while a summary is being written: after a while it offers to start over, in case it is stuck. */
+function SlowSummaryNotice({
+  onRetry,
+  pending,
+}: {
+  onRetry: () => void;
+  pending: boolean;
+}) {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setSlow(true), SLOW_SUMMARY_MS);
+    return () => clearTimeout(id);
+  }, []);
+  if (!slow) return null;
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+      <span>This is taking longer than usual.</span>
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-1.5"
+        onClick={onRetry}
+        disabled={pending}
+      >
+        <RotateCw /> Try again
+      </Button>
+    </div>
+  );
+}
+
 export default function DemoPage() {
   const router = useRouter();
   const { status, logout } = useLocalAuth();
@@ -54,6 +88,8 @@ export default function DemoPage() {
   const finishLesson = useFinishLesson();
   const deleteLesson = useDeleteLesson();
   const clearLessons = useClearLessons();
+  const resummarize = useResummarize();
+  const [retries, setRetries] = useState(0); // restarts the "taking too long" timer after each retry
 
   const [lessonId, setLessonId] = useState<number | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
@@ -180,6 +216,17 @@ export default function DemoPage() {
   function handleClearAll() {
     clearLessons.mutate(undefined, {
       onSuccess: () => openSession(null),
+      onError: (err) => setRequestError(errorMessage(err)),
+    });
+  }
+
+  // Write the summary again from the saved transcript (after a failure, or when it takes too long).
+  function handleRetry() {
+    if (!lesson) return;
+    setRequestError(null);
+    setStreamingId(lesson.id);
+    setRetries((n) => n + 1);
+    resummarize.mutate(lesson.id, {
       onError: (err) => setRequestError(errorMessage(err)),
     });
   }
@@ -424,13 +471,34 @@ export default function DemoPage() {
                 </p>
               )}
 
+              {processing && lesson?.stage === "summarizing" && (
+                <SlowSummaryNotice
+                  key={`${lesson.id}-${retries}`}
+                  onRetry={handleRetry}
+                  pending={resummarize.isPending}
+                />
+              )}
+
               {lesson?.status === "error" && (
-                <Alert variant="destructive">
-                  <AlertCircle />
-                  <AlertDescription>
-                    Something went wrong: {lesson.error}
-                  </AlertDescription>
-                </Alert>
+                <div className="flex flex-col items-start gap-3">
+                  <Alert variant="destructive">
+                    <AlertCircle />
+                    <AlertDescription>
+                      Something went wrong: {lesson.error}
+                    </AlertDescription>
+                  </Alert>
+                  {/* the transcript was saved, so the summary can be written again */}
+                  {lesson.segments.length > 0 && (
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={handleRetry}
+                      disabled={resummarize.isPending}
+                    >
+                      <RotateCw /> Summarize again
+                    </Button>
+                  )}
+                </div>
               )}
 
               {!processing && !summary && lesson?.status !== "error" && (
