@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import db, { type LessonRow, type SegmentRow } from "../db.js";
-import { summarize } from "../services/summarize.js";
+import { mergeSummaries } from "../services/merge.js";
+import { summarize, type Summary } from "../services/summarize.js";
 import { transcribe } from "../services/transcribe.js";
 
 const lessons = new Hono();
@@ -126,16 +127,54 @@ function startRun(id: number): Run {
   return run;
 }
 
+/** A summary saved earlier, read leniently (summaries from before `dueText` existed don't have it). */
+function storedSummary(json: string | null): Summary | null {
+  if (!json) return null;
+  try {
+    const raw = JSON.parse(json);
+    return {
+      topics: raw.topics ?? [],
+      keyPoints: raw.keyPoints ?? [],
+      assignments: (raw.assignments ?? []).map((a: { title: string; dueDate?: string | null; dueText?: string | null }) => ({
+        title: a.title,
+        dueText: a.dueText ?? null,
+        dueDate: a.dueDate ?? null,
+      })),
+      tasks: raw.tasks ?? [],
+      studyTip: raw.studyTip ?? "",
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function summarizeLesson(id: number, run: Run) {
   const isCurrent = () => runs.get(id) === run;
   try {
-    const transcript = findSegments(id)
-      .map((s) => s.text)
-      .join(" ");
-    if (!transcript) throw new Error(findLesson(id)?.error ?? "No speech was detected in the recording");
+    const lesson = findLesson(id);
+    const segments = findSegments(id);
+    const transcript = segments.map((s) => s.text).join(" ");
+    if (!transcript) throw new Error(lesson?.error ?? "No speech was detected in the recording");
+
+    // A continued session already has a summary for everything before `seq_offset`: summarize only the new
+    // part and fold it in, rather than writing the whole summary again.
+    const previous = lesson && lesson.seq_offset > 0 ? storedSummary(lesson.summary) : null;
+    const newPart = previous
+      ? segments
+          .filter((s) => s.seq >= lesson!.seq_offset)
+          .map((s) => s.text)
+          .join(" ")
+      : transcript;
 
     db.prepare("UPDATE lessons SET transcript = ?, stage = 'summarizing' WHERE id = ?").run(transcript, id);
-    const summary = await summarize(transcript, run.controller.signal);
+
+    let summary: Summary;
+    if (previous && !newPart) {
+      summary = previous; // nothing new was said: keep the summary as it was
+    } else {
+      const fresh = await summarize(newPart, run.controller.signal);
+      summary = previous ? mergeSummaries(previous, fresh) : fresh;
+    }
     if (!isCurrent()) return;
 
     // The title is left alone: a name the student gave is kept, and an unnamed session is named after

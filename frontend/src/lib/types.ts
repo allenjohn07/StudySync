@@ -13,7 +13,8 @@ export interface User {
 export interface LessonSummary {
   topics: string[];
   keyPoints: string[];
-  assignments: { title: string; dueDate: string | null }[];
+  // dueText: the speaker's own words for the deadline ("next Wednesday"), which the backend turns into dueDate
+  assignments: { title: string; dueDate: string | null; dueText?: string | null }[];
   tasks: string[];
   studyTip: string;
 }
