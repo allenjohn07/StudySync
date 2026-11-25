@@ -281,3 +281,36 @@
     animation: none;
   }
 }
+
+/* Sticker icons (components/sticker.tsx): tilted, they bob gently and pop on hover. */
+@keyframes sticker-float {
+  0%,
+  100% {
+    transform: rotate(var(--sticker-rotate, 0deg)) translateY(0);
+  }
+  50% {
+    transform: rotate(calc(var(--sticker-rotate, 0deg) + 3deg)) translateY(-6px);
+  }
+}
+
+.sticker {
+  transform: rotate(var(--sticker-rotate, 0deg));
+}
+
+.sticker-float {
+  animation: sticker-float 5s ease-in-out infinite;
+}
+
+.sticker-svg {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sticker:hover .sticker-svg {
+  transform: scale(1.12) rotate(6deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sticker-float {
+    animation: none;
+  }
+}

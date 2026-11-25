@@ -117,3 +117,26 @@ Small and quick, `ease-out`, 150–300 ms:
 Subjects (classes) group sessions. Each has a color from a fixed palette (`lib/subjects.ts` `SUBJECT_DOT`, kept in
 sync with `SUBJECT_COLORS` in `backend/src/routes/subjects.ts`); the color only ever appears as a small dot (size-2)
 next to the subject's name. Unsorted sessions use a hollow ring dot. Don't tint backgrounds or text with subject colors.
+
+## Illustrations and stickers (the playful layer)
+
+The user wants the site to feel friendly and student-made, not like a dev tool, and asked for "more characters" and
+"more space, less text". Two pieces carry that:
+
+- **Illustrations** (`components/illustration.tsx`, files in `public/illustrations/*.webp`): hand-drawn halftone line
+  art of students (notebook, listening, checklist, private). They are stored as **black ink on a transparent
+  background** and get `dark:invert`, so they sit on any surface in both themes. To add one, convert the paper
+  background to alpha the same way (alpha = darkness relative to the paper colour; trim the margins; save as WebP
+  ~900px). Put a soft blurred pastel blob behind (`absolute inset-[12%] rounded-full blur-3xl bg-<hue>-300/30
+  dark:bg-<hue>-400/10`). Use one per section at most.
+- **Stickers** (`components/sticker.tsx`): tilted line icons with a thick pastel backing (green, yellow, purple,
+  peach, blue, pink) and a dark `#24262b` line, which stays dark in dark mode on purpose. `float` makes them bob
+  gently (off with reduced motion), and they pop on hover. Scatter 2–4 around an illustration or a section's edges
+  (`max-sm:hidden` when they'd crowd a phone), or use one next to a feature's eyebrow label. Icons: mic, book, pencil,
+  list, check, chart, bulb, cap, headphones, calendar, clock, lock, sparkle. Add new ones as simple 24px line paths.
+- **Copy stays short**: one-sentence bodies, a single short lede in the hero. Sections breathe (`py-28 sm:py-36`,
+  `gap-28` between feature rows).
+
+Landing order: hero (text left, notebook illustration with stickers right) → demo band ("A lecture, turned into
+notes") → three alternating feature rows with illustrations → centred closing CTA ringed by floating stickers →
+slim footer (brand, three links, the `StudySync` watermark). The login panel shows the listening illustration.

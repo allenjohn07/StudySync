@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { LogoMark } from "@/components/brand-mark";
+import { Illustration } from "@/components/illustration";
+import { Sticker } from "@/components/sticker";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -58,6 +60,13 @@ export default function LoginPage() {
           </div>
 
           <div className="dot-grid relative hidden overflow-hidden border-l border-border bg-muted/40 lg:flex lg:flex-col lg:justify-end dark:bg-black/20">
+            <div className="relative flex flex-1 items-center justify-center px-14 pt-14">
+              <div className="relative w-full max-w-[360px]">
+                <Illustration name="listening" alt="A student relaxing with headphones on" eager sizes="360px" />
+                <Sticker name="headphones" color="blue" rotate={-12} size={48} float className="absolute -bottom-2 left-[-6%]" />
+                <Sticker name="sparkle" color="yellow" rotate={10} size={36} float delay={1200} className="absolute top-0 right-[6%]" />
+              </div>
+            </div>
             <div className="relative z-10 flex flex-col gap-6 p-14">
               <span className="inline-flex h-7 w-fit items-center gap-2 rounded-full border border-border bg-card px-3 text-[13px] text-muted-foreground shadow-xs dark:bg-white/[0.03]">
                 <span className="size-1.5 rounded-full bg-highlight" />
