@@ -5,6 +5,7 @@ import { BrandMark } from "@/components/brand-mark";
 import { FitText } from "@/components/landing/fit-text";
 import { LiveDemoWindow } from "@/components/landing/live-demo";
 import { SiteHeader } from "@/components/site-header";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { WritingGroup, WritingText, WritingWord, writingDelays } from "@/components/ui/writing-text";
 import { cn } from "@/lib/utils";
@@ -34,13 +35,13 @@ export default function RootPage() {
 function LandingPage() {
   return (
     <div className="flex min-h-dvh bg-background p-3 sm:p-4">
-      <div className="w-full overflow-hidden rounded-[22px] border border-foreground/10 bg-card">
+      <div className="w-full overflow-hidden rounded-[22px] border border-border bg-card">
         <section className={cn(HERO_SCREEN, "flex flex-col")}>
           <Nav />
           <Hero />
         </section>
         <WindowBand />
-        <section className={cn(SCREEN, "flex flex-col border-t border-foreground/10")}>
+        <section className={cn(SCREEN, "flex flex-col border-t border-border")}>
           <FeatureGrid />
           <ClosingCta />
           <Footer />
@@ -53,15 +54,16 @@ function LandingPage() {
 function Nav() {
   return (
     <SiteHeader>
-      <div className="flex items-center gap-6 text-[15px] font-medium sm:gap-8">
+      <div className="flex items-center gap-2 text-sm font-medium sm:gap-3">
         <a
           href="#how-it-works"
           onClick={scrollToDemo}
-          className="hidden underline decoration-transparent decoration-2 underline-offset-4 transition-colors hover:decoration-highlight sm:inline"
+          className="hidden rounded-lg px-3 py-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:inline"
         >
           How it works
         </a>
-        <Button render={<Link href="/login" />} nativeButton={false} className="h-auto px-5 py-2.5 text-[15px]">
+        <ThemeToggle className="max-sm:hidden" />
+        <Button render={<Link href="/login" />} nativeButton={false}>
           Start free
         </Button>
       </div>
@@ -71,10 +73,14 @@ function Nav() {
 
 function Hero() {
   return (
-    <div className="flex flex-1 flex-col items-start justify-center gap-6 px-6 py-12 sm:px-14">
+    <div className="flex flex-1 flex-col items-start justify-center gap-7 px-6 py-12 sm:px-14">
+      <span className="inline-flex h-7 items-center gap-2 rounded-full border border-border bg-card px-3 text-[13px] text-muted-foreground shadow-xs dark:bg-white/[0.03]">
+        <span className="size-1.5 rounded-full bg-emerald-500" />
+        Runs on your laptop · Whisper + Ollama
+      </span>
       <h1
         aria-label="Stop writing. Start listening."
-        className="font-display text-[44px] leading-[1] font-extrabold tracking-[-0.02em] [font-stretch:75%] sm:text-[80px] lg:text-[120px] xl:text-[140px]"
+        className="text-[44px] leading-[0.98] font-semibold tracking-[-0.05em] sm:text-[76px] lg:text-[108px] xl:text-[128px]"
       >
         <WritingGroup>
         <div aria-hidden="true">
@@ -86,7 +92,7 @@ function Hero() {
               writing.
               {/* the strike-through is drawn across the word once it has landed */}
               <span
-                className="writing-text-draw absolute inset-x-0 top-1/2 h-[6px] bg-destructive sm:h-[8px] xl:h-[11px]"
+                className="writing-text-draw absolute inset-x-0 top-[54%] h-[5px] rounded-full bg-destructive sm:h-[7px] xl:h-[9px]"
                 style={{ "--writing-text-delay": `${HERO_DELAYS[1] + HERO_RISE_MS * 0.7}ms` } as React.CSSProperties}
               />
             </span>
@@ -97,14 +103,14 @@ function Hero() {
             Start
           </WritingWord>{" "}
           <WritingWord delay={HERO_DELAYS[3]} duration={HERO_RISE_MS}>
-            <mark className="inline-block -rotate-[1.5deg] bg-highlight px-3 text-foreground sm:px-4 xl:px-5">
+            <mark className="inline-block -rotate-[1.5deg] rounded-[0.12em] bg-highlight px-3 text-highlight-foreground sm:px-4 xl:px-5">
               listening.
             </mark>
           </WritingWord>
         </div>
         </WritingGroup>
       </h1>
-      <p className="max-w-[620px] text-xl leading-snug sm:text-[22px]">
+      <p className="max-w-[580px] text-lg leading-relaxed text-muted-foreground sm:text-xl">
         StudySync records your lecture, transcribes it live, and hands you topics, key points, due
         dates and a study tip when it ends.
       </p>
@@ -113,8 +119,9 @@ function Hero() {
           render={<Link href="/login" />}
           nativeButton={false}
           size="lg"
-          className="h-auto px-7 py-[18px] text-lg"
+          className="h-11 gap-2 px-5 text-[15px]"
         >
+          <span className="size-2 rounded-full bg-destructive" />
           Start recording
         </Button>
         <Button
@@ -123,7 +130,7 @@ function Hero() {
           onClick={scrollToDemo}
           size="lg"
           variant="outline"
-          className="h-auto px-7 py-[18px] text-lg"
+          className="h-11 px-5 text-[15px]"
         >
           See an example
         </Button>
@@ -134,7 +141,7 @@ function Hero() {
 
 function WindowBand() {
   return (
-    <section id="how-it-works" className="flex min-h-dvh items-center justify-center bg-highlight px-4 sm:px-10">
+    <section id="how-it-works" className="dot-grid flex min-h-dvh items-center justify-center border-t border-border bg-muted/40 px-4 sm:px-10 dark:bg-black/20">
       <div className="w-full max-w-[1240px]">
         <LiveDemoWindow />
       </div>
@@ -150,23 +157,23 @@ const FEATURES = [
 
 function FeatureGrid() {
   return (
-    <div className="grid flex-1 grid-cols-1 border-b border-foreground/10 sm:grid-cols-3">
+    <div className="grid flex-1 grid-cols-1 border-b border-border sm:grid-cols-3">
       {FEATURES.map((f, i) => (
         <div
           key={f.n}
           className={cn(
-            "flex flex-col justify-center gap-3 border-foreground/10 px-6 py-12 sm:px-10",
+            "flex flex-col justify-center gap-3 border-border px-6 py-12 sm:px-10",
             i < FEATURES.length - 1 && "border-b sm:border-r sm:border-b-0"
           )}
         >
-          <span className="font-display text-7xl leading-none font-extrabold tracking-[-0.04em] text-foreground/15 [font-stretch:75%] sm:text-8xl">
+          <span className="text-6xl leading-none font-semibold tracking-[-0.06em] text-foreground/10 tabular-nums sm:text-7xl">
             {f.n}
           </span>
-          <span className="label-mono">{f.label}</span>
-          <b className="font-display text-3xl font-extrabold tracking-[-0.02em] sm:text-4xl">
+          <span className="label-mono mt-2">{f.label}</span>
+          <b className="text-2xl font-semibold tracking-[-0.03em] sm:text-[28px]">
             <WritingText text={f.title} />
           </b>
-          <span className="max-w-sm text-lg leading-[1.45] sm:text-xl">{f.body}</span>
+          <span className="max-w-sm text-[15px] leading-relaxed text-muted-foreground sm:text-base">{f.body}</span>
         </div>
       ))}
     </div>
@@ -176,14 +183,14 @@ function FeatureGrid() {
 function ClosingCta() {
   return (
     <div className="flex flex-col items-start justify-between gap-6 px-6 py-14 sm:flex-row sm:items-center sm:px-14 sm:py-16">
-      <h2 className="font-display text-4xl leading-[1] font-extrabold tracking-[-0.02em] [font-stretch:75%] sm:text-[60px]">
+      <h2 className="text-4xl leading-[1.02] font-semibold tracking-[-0.045em] sm:text-[56px]">
         <WritingText text={"Stop taking notes.\nStart understanding."} speed={40} />
       </h2>
       <Button
         render={<Link href="/login" />}
         nativeButton={false}
         size="lg"
-        className="h-auto px-8 py-[18px] text-xl"
+        className="h-11 px-5 text-[15px]"
       >
         Start free
       </Button>
@@ -195,21 +202,20 @@ function FooterColumn({ title, children }: { title: string; children: React.Reac
   return (
     <div className="flex flex-col gap-3">
       <span className="label-mono">{title}</span>
-      <ul className="flex flex-col gap-2 text-[15px]">{children}</ul>
+      <ul className="flex flex-col gap-2 text-sm text-muted-foreground">{children}</ul>
     </div>
   );
 }
 
-const footerLink =
-  "underline decoration-transparent decoration-2 underline-offset-4 transition-colors hover:decoration-highlight";
+const footerLink = "transition-colors hover:text-foreground";
 
 function Footer() {
   return (
-    <footer className="overflow-hidden border-t border-foreground/10">
+    <footer className="overflow-hidden border-t border-border">
       <div className="grid gap-10 px-6 py-12 sm:grid-cols-2 sm:px-14 lg:grid-cols-4">
         <div className="flex flex-col gap-4">
           <BrandMark />
-          <p className="max-w-xs text-[15px] leading-snug text-muted-foreground">
+          <p className="max-w-xs text-sm leading-relaxed text-muted-foreground">
             Record the lecture. Keep the understanding.
           </p>
         </div>
@@ -244,12 +250,12 @@ function Footer() {
 
       {/* Scaled to the exact width of the footer, so the left and right margins are equal. */}
       <div aria-hidden="true" className="select-none px-6 sm:px-14">
-        <FitText className="font-display leading-[0.78] font-extrabold tracking-[-0.04em] text-foreground/[0.07] [font-stretch:75%]">
+        <FitText className="leading-[0.8] font-semibold tracking-[-0.06em] text-foreground/[0.05]">
           StudySync
         </FitText>
       </div>
 
-      <div className="label-mono flex flex-wrap justify-between gap-2 border-t border-foreground/10 px-6 py-5 normal-case tracking-normal sm:px-14">
+      <div className="flex flex-wrap justify-between gap-2 border-t border-border px-6 py-5 text-xs text-muted-foreground sm:px-14">
         <span>© StudySync · Made for students</span>
         <span>Built with Whisper and Ollama</span>
       </div>

@@ -73,47 +73,81 @@
 }
 
 :root {
-  /* StudySync design: Figtree body + Bricolage Grotesque display + JetBrains Mono labels */
-  --font-sans: var(--font-figtree), "Figtree", ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-bricolage), var(--font-sans);
-  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", ui-monospace, monospace;
+  /* Neutral, Inter-based look (oklch.fyi / interfaces.dev): greys, hairline borders, yellow used sparingly. */
+  --font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
 
-  --background: #ece8dc;
-  --foreground: #111111;
-  --card: #fffdf7;
-  --card-foreground: #111111;
-  --popover: #fffdf7;
-  --popover-foreground: #111111;
-  --primary: #111111;
-  --primary-foreground: #fffdf7;
-  --secondary: #f3f0e6;
-  --secondary-foreground: #111111;
-  --muted: #f3f0e6;
-  --muted-foreground: #555555;
-  --accent: #f3f0e6;
-  --accent-foreground: #111111;
-  --destructive: #ec3a2a;
-  --border: #111111;
-  --input: #111111;
-  --ring: #ffe22e;
-  --highlight: #ffe22e;
-  --highlight-foreground: #111111;
-  --chart-1: #111111;
-  --chart-2: #ffe22e;
-  --chart-3: #ec3a2a;
-  --chart-4: #8a8572;
-  --chart-5: #4a6670;
+  --background: oklch(0.985 0 0);
+  --foreground: oklch(0.18 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0 0);
+  --primary: oklch(0.2 0 0);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0 0);
+  --secondary-foreground: oklch(0.2 0 0);
+  --muted: oklch(0.965 0 0);
+  --muted-foreground: oklch(0.53 0 0);
+  --accent: oklch(0.955 0 0);
+  --accent-foreground: oklch(0.2 0 0);
+  --destructive: oklch(0.6 0.21 27);
+  --border: oklch(0.92 0 0);
+  --input: oklch(0.9 0 0);
+  --ring: oklch(0.72 0 0);
+  --highlight: oklch(0.9 0.17 100);
+  --highlight-foreground: oklch(0.22 0.02 90);
+  --chart-1: oklch(0.2 0 0);
+  --chart-2: oklch(0.9 0.17 100);
+  --chart-3: oklch(0.6 0.21 27);
+  --chart-4: oklch(0.6 0 0);
+  --chart-5: oklch(0.45 0 0);
   --radius: 0.75rem;
 
-  /* Sidebar stays a permanent ink-black rail. */
-  --sidebar: #111111;
-  --sidebar-foreground: #fffdf7;
-  --sidebar-primary: #ffe22e;
-  --sidebar-primary-foreground: #111111;
-  --sidebar-accent: #221f14;
-  --sidebar-accent-foreground: #fffdf7;
-  --sidebar-border: #2e2a1c;
-  --sidebar-ring: #ffe22e;
+  --sidebar: oklch(0.975 0 0);
+  --sidebar-foreground: oklch(0.2 0 0);
+  --sidebar-primary: oklch(0.2 0 0);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.2 0 0 / 0.06);
+  --sidebar-accent-foreground: oklch(0.18 0 0);
+  --sidebar-border: oklch(0.92 0 0);
+  --sidebar-ring: oklch(0.72 0 0);
+}
+
+.dark {
+  --background: oklch(0.165 0 0);
+  --foreground: oklch(0.96 0 0);
+  --card: oklch(0.185 0 0);
+  --card-foreground: oklch(0.96 0 0);
+  --popover: oklch(0.2 0 0);
+  --popover-foreground: oklch(0.96 0 0);
+  --primary: oklch(0.96 0 0);
+  --primary-foreground: oklch(0.18 0 0);
+  --secondary: oklch(0.24 0 0);
+  --secondary-foreground: oklch(0.96 0 0);
+  --muted: oklch(0.225 0 0);
+  --muted-foreground: oklch(0.68 0 0);
+  --accent: oklch(0.25 0 0);
+  --accent-foreground: oklch(0.96 0 0);
+  --destructive: oklch(0.66 0.2 25);
+  --border: oklch(1 0 0 / 0.09);
+  --input: oklch(1 0 0 / 0.13);
+  --ring: oklch(0.55 0 0);
+  --highlight: oklch(0.88 0.16 98);
+  --highlight-foreground: oklch(0.2 0.02 90);
+  --chart-1: oklch(0.96 0 0);
+  --chart-4: oklch(0.55 0 0);
+  --chart-5: oklch(0.7 0 0);
+
+  --sidebar: oklch(0.155 0 0);
+  --sidebar-foreground: oklch(0.96 0 0);
+  --sidebar-primary: oklch(0.96 0 0);
+  --sidebar-primary-foreground: oklch(0.18 0 0);
+  --sidebar-accent: oklch(1 0 0 / 0.07);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(1 0 0 / 0.09);
+  --sidebar-ring: oklch(0.55 0 0);
 }
 
 @layer base {
@@ -125,6 +159,12 @@
   }
   html {
     @apply font-sans;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--highlight) 55%, transparent);
+    color: var(--foreground);
   }
   /* No visible scrollbars anywhere (the page, the transcript, the sessions list); scrolling still works. */
   * {
@@ -152,7 +192,16 @@
 @layer utilities {
   .label-mono {
     font-family: var(--font-mono);
-    @apply text-xs tracking-[0.12em] text-muted-foreground uppercase;
+    @apply text-[11px] tracking-[0.08em] text-muted-foreground uppercase tabular-nums;
+  }
+  /* A hairline section heading with a rule running to the right (as on oklch.fyi). */
+  .section-rule {
+    @apply flex items-center gap-3 text-sm font-medium text-foreground after:h-px after:flex-1 after:bg-border;
+  }
+  /* Faint dot grid for empty/decorative surfaces. */
+  .dot-grid {
+    background-image: radial-gradient(color-mix(in oklch, var(--foreground) 12%, transparent) 1px, transparent 1px);
+    background-size: 16px 16px;
   }
 }
 

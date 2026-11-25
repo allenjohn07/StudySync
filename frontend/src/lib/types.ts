@@ -27,6 +27,18 @@ export interface Lesson {
   segments: { seq: number; start: number; text: string }[];
   summary: LessonSummary | null;
   error: string | null;
+  /** The subject (class) it is filed under; null = unsorted. */
+  subjectId: number | null;
+  createdAt: string;
+}
+
+export type SubjectColor = "gray" | "blue" | "green" | "amber" | "rose" | "violet" | "teal" | "orange";
+
+/** A subject or class that groups sessions, e.g. "Biology 101". */
+export interface Subject {
+  id: number;
+  name: string;
+  color: SubjectColor;
   createdAt: string;
 }
 

@@ -35,8 +35,8 @@ Hono backend ── ffmpeg ──▶ 16 kHz mono wav ──▶ whisper.cpp (larg
 | --- | --- |
 | `/` | Landing page |
 | `/login` | A single "Log in" button. Login state is a flag in `localStorage` for now (no real auth yet) |
-| `/dashboard` | A static mock of the recording and summary screen, kept as a safe fallback. Has a "Try the live demo" button |
-| `/dashboard/demo` | The real thing: live recording, live transcript, summary, and the sessions sidebar |
+| `/dashboard` | The app: live recording, live transcript, summary, and a sidebar of sessions grouped by subject. **New recording** asks which subject (or class) it belongs to, or lets you continue an earlier session |
+| `/dashboard/demo` | Old address; redirects to `/dashboard` |
 
 ## Stack
 
@@ -84,8 +84,11 @@ cd backend && npm run dev         # http://localhost:4000
 cd frontend && npm run dev        # http://localhost:3000
 ```
 
-Open <http://localhost:3000>, click **Log in**, then **Try the live demo** and allow the
+Open <http://localhost:3000>, click **Log in**, then **New recording**, pick a subject and allow the
 microphone. Say something, press **Stop**, and wait a few seconds for the summary.
+
+To start over with demo data (four subjects and a handful of sessions), run `cd backend && npm run seed`.
+It deletes every subject and session first.
 
 To shut down, press `Ctrl+C` in each tab. Your sessions stay in `backend/studysync.db`.
 
@@ -131,15 +134,17 @@ The repository has two folders and this README.
 backend/                  Hono API (port 4000)
   src/app.ts              Hono app, CORS, routes
   src/index.ts            Server entry point
-  src/db.ts               SQLite setup: lessons and segments tables
-  src/routes/lessons.ts   Session routes and the job queue
+  src/db.ts               SQLite setup: subjects, lessons and segments tables
+  src/routes/lessons.ts   Session routes (create, continue, rename/move) and the job queue
+  src/routes/subjects.ts  Subjects (classes) that group sessions
+  src/seed.ts             `npm run seed`: wipes the database and adds demo data
   src/services/           transcribe.ts (ffmpeg + whisper.cpp), summarize.ts (Ollama)
   models/                 Whisper model file (git-ignored, you download it)
 frontend/                 Next.js app (port 3000)
-  src/app/                Pages: landing, login, dashboard, dashboard/demo
+  src/app/                Pages: landing, login, dashboard
   src/components/         UI primitives (shadcn) and shared pieces
-  src/hooks/              use-audio-recorder, use-lessons, use-local-auth
-  src/lib/                api.ts (typed fetch client), types.ts
+  src/hooks/              use-audio-recorder, use-lessons, use-subjects, use-local-auth
+  src/lib/                api.ts (typed fetch client), types.ts, subjects.ts
   src/design/             Original HTML mockups
   .claude/skills/         The design guide for AI coding assistants
   CLAUDE.md               Frontend conventions

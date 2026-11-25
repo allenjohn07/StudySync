@@ -8,8 +8,9 @@ and TanStack Query. The backend is in `../backend`; the root `README.md` has the
 ## Pages
 
 - `/` landing page, `/login` (a single button; the "logged in" flag is in `localStorage`, see `hooks/use-local-auth.ts`).
-- `/dashboard` is a static mock of the recording screen, kept as a fallback.
-- `/dashboard/demo` is the real pipeline: live recording, live transcript, summary, sessions sidebar.
+- `/dashboard` is the app: an oklch.fyi-style shell (full-width header, collapsible `AppSidebar` with sessions grouped by
+  subject) around the live recording, transcript and summary. `NewSessionDialog` runs before every recording: pick or
+  create a subject, or continue an earlier session. `/dashboard/demo` only redirects here.
 
 ## Conventions
 
@@ -20,11 +21,11 @@ and TanStack Query. The backend is in `../backend`; the root `README.md` has the
   isn't a native `<button>`, also pass `nativeButton={false}` on `Button`. `TooltipProvider` takes `delay`.
   Check the generated source in `components/ui/` before wiring up a new component. Add components with
   `npx shadcn@latest add <name>`, then restyle them to the design system.
-- **Design system**: the guide is `.claude/skills/studysync-design/SKILL.md` (cream, ink and marker yellow, thick
-  borders for badges/cards, thin ones for page structure); the original mockups are in `src/design/`. Tokens live
-  in `src/app/globals.css` (Tailwind v4: no `tailwind.config`). There is no dark mode.
-- **Page frame**: every page is the rounded full-window card on the page margin (`p-3 sm:p-4`), and landing sections
-  are sized in `dvh`.
+- **Design system**: the guide is `.claude/skills/studysync-design/SKILL.md` (neutral greys in OKLCH, Inter, hairline
+  borders, yellow used sparingly, light and dark mode via `next-themes`). Tokens live in `src/app/globals.css`
+  (`:root` and `.dark`; Tailwind v4: no `tailwind.config`).
+- **Page frame**: the landing and login pages are a rounded full-window card on the page margin (`p-3 sm:p-4`), and
+  landing sections are sized in `dvh`. The dashboard is edge to edge (header + sidebar + main).
 - **Text effects**: `WritingText` / `WritingWord` (`components/ui/writing-text.tsx`) reveal titles word by word and
   `Words` reuses the effect for the live transcript; `ShimmeringText` marks things that are being generated.
   Their CSS is in `globals.css` and respects reduced motion.

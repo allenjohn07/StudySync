@@ -106,13 +106,13 @@ function Transcript({
   animate: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-4 text-lg leading-snug sm:text-xl">
+    <div className="flex flex-col gap-3.5 text-[15px] leading-relaxed sm:text-base">
       {TOKENS.map((tokens, li) => {
         const shown = tokens.slice(0, visibleWords(li));
         if (shown.length === 0) return null;
         return (
           <div key={li} className="flex gap-4">
-            <span className="pt-1 font-mono text-sm text-muted-foreground">
+            <span className="pt-0.5 font-mono text-xs text-muted-foreground tabular-nums">
               {clock(
                 LECTURE_START_SECONDS + Math.floor(LINE_STARTS[li] / 1000),
               )}
@@ -145,7 +145,7 @@ function Transcript({
                         " "
                       ))}
                     {tok.mark ? (
-                      <mark className="rounded-[3px] bg-highlight px-0.5 text-foreground">
+                      <mark className="rounded-[3px] bg-highlight px-0.5 text-highlight-foreground">
                         {word}
                       </mark>
                     ) : (
@@ -215,26 +215,34 @@ export function LiveDemoWindow() {
   return (
     <div
       ref={rootRef}
-      className="overflow-hidden rounded-[22px] border border-foreground/10 bg-card shadow-[0_12px_0_var(--highlight)]"
+      className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_1px_2px_oklch(0_0_0/0.04),0_24px_64px_-24px_oklch(0_0_0/0.18)] dark:shadow-[0_24px_64px_-24px_oklch(0_0_0/0.6)]"
     >
-      <div className="flex items-center gap-5 border-b border-foreground/10 px-6 py-4">
-        <div className="flex gap-2">
-          <span className="size-5 rounded-full border-2 border-foreground" />
-          <span className="size-5 rounded-full border-2 border-foreground" />
-          <span className="size-5 rounded-full border-2 border-foreground" />
+      <div className="flex items-center gap-4 border-b border-border bg-muted/40 px-4 py-3 dark:bg-white/[0.02]">
+        <div className="flex gap-1.5">
+          <span className="size-3 rounded-full bg-foreground/15" />
+          <span className="size-3 rounded-full bg-foreground/15" />
+          <span className="size-3 rounded-full bg-foreground/15" />
         </div>
-        <span className="label-mono text-sm normal-case tracking-normal text-foreground">
-          StudySync · Biology 201, Lecture 9
+        <span className="flex items-center gap-2 text-[13px] text-muted-foreground">
+          <span className="size-2 rounded-full bg-emerald-500" />
+          Biology 201
+          <span className="text-muted-foreground/50">/</span>
+          <span className="font-medium text-foreground">Lecture 9</span>
         </span>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2">
-        <div className="flex flex-col gap-5 border-b border-foreground/10 p-6 sm:p-9 lg:border-r lg:border-b-0">
+        <div className="flex flex-col gap-5 border-b border-border p-6 sm:p-8 lg:border-r lg:border-b-0">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 text-xl font-bold">
+            <div
+              className={cn(
+                "inline-flex h-7 items-center gap-2 rounded-full border border-border px-2.5 text-[13px] font-medium",
+                recording && "border-destructive/30 bg-destructive/[0.06] text-destructive",
+              )}
+            >
               <span
                 className={cn(
-                  "size-4 rounded-full",
+                  "size-2 rounded-full",
                   recording
                     ? "animate-pulse bg-destructive"
                     : "bg-muted-foreground/40",
@@ -248,14 +256,14 @@ export function LiveDemoWindow() {
                 <ShimmeringText text="Processing" />
               )}
             </div>
-            <b className="font-mono text-xl font-medium">
+            <b className="font-mono text-sm font-normal text-muted-foreground tabular-nums">
               {clock(stopSeconds)}
             </b>
           </div>
 
           <div
             className={cn(
-              "flex h-[72px] items-center gap-1 transition-opacity",
+              "flex h-16 items-center gap-[3px] transition-opacity",
               !recording && "opacity-35",
             )}
             aria-hidden="true"
@@ -270,14 +278,14 @@ export function LiveDemoWindow() {
               return (
                 <span
                   key={i}
-                  className="w-1 rounded-sm bg-foreground transition-[height] duration-100"
-                  style={{ height: Math.round(6 + wave * 60) }}
+                  className="w-[3px] rounded-full bg-foreground transition-[height] duration-100"
+                  style={{ height: Math.round(4 + wave * 52) }}
                 />
               );
             })}
           </div>
 
-          <h3 className="label-mono">Live transcript</h3>
+          <h3 className="section-rule">Transcript</h3>
           {/* An invisible full copy reserves the height, so the window doesn't jump while the text types in. */}
           <div className="grid">
             <div
@@ -299,24 +307,26 @@ export function LiveDemoWindow() {
               <>
                 <Button
                   variant="outline"
-                  className="h-12 gap-2.5 px-6 text-base"
+                  size="lg"
+                  className="gap-2.5 px-4"
                   onClick={() => setElapsed(T_REC_END)}
                 >
-                  <span className="size-3 bg-foreground" /> Stop
+                  <span className="size-2.5 rounded-[3px] bg-destructive" /> Stop
                 </Button>
-                <p role="status" className="text-lg font-medium">
+                <p role="status" className="text-sm font-medium">
                   <ShimmeringText text="Transcribing…" />
                 </p>
               </>
             ) : phase === "done" ? (
               <Button
-                className="h-12 px-6 text-base"
+                size="lg"
+                className="px-4"
                 onClick={() => setElapsed(0)}
               >
                 Record again
               </Button>
             ) : (
-              <p role="status" className="text-lg font-medium">
+              <p role="status" className="text-sm font-medium">
                 <ShimmeringText
                   text={phase === "thinking" ? "Thinking…" : "Summarizing…"}
                 />
@@ -325,14 +335,14 @@ export function LiveDemoWindow() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-5 p-6 sm:p-9">
+        <div className="flex flex-col gap-5 p-6 sm:p-8">
           <div className="flex items-baseline justify-between">
-            <b className="font-display text-4xl font-extrabold tracking-[-0.02em]">
+            <b className="text-xl font-semibold tracking-[-0.02em]">
               <WritingText text="Summary" />
             </b>
             <span
               className={cn(
-                "flex items-center gap-1.5 text-sm font-medium transition-opacity",
+                "flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-opacity",
                 phase === "done" ? "opacity-100" : "opacity-0",
               )}
             >
@@ -350,7 +360,7 @@ export function LiveDemoWindow() {
               {phase === "summarizing" || phase === "done" ? (
                 <SummaryStream summary={SUMMARY} animate size="lg" />
               ) : (
-                <p className="text-lg text-muted-foreground">
+                <p className="text-[15px] text-muted-foreground">
                   Your summary appears here when you stop.
                 </p>
               )}
