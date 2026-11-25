@@ -1,8 +1,10 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import db, { type LessonRow, type SegmentRow } from "../db.js";
+import { scheduleAppleSync } from "../services/apple-calendar.js";
 import { mergeSummaries } from "../services/merge.js";
 import { summarize, type Summary } from "../services/summarize.js";
+import { DEFAULT_TITLE, titleFromSummary } from "../services/titles.js";
 import { transcribe } from "../services/transcribe.js";
 
 const lessons = new Hono();
@@ -17,13 +19,6 @@ function findSegments(id: number) {
     .all(id) as unknown as SegmentRow[];
 }
 
-export const DEFAULT_TITLE = "Untitled lecture";
-
-// Names a session after what was talked about, so the sidebar list is readable.
-export function titleFromSummary(topics: string[] | undefined) {
-  const title = (topics ?? []).slice(0, 2).join(" · ");
-  return title ? title.slice(0, 60) : DEFAULT_TITLE;
-}
 
 function serialize(row: LessonRow, withSegments = true) {
   const summary = row.summary ? JSON.parse(row.summary) : null;
@@ -183,6 +178,7 @@ async function summarizeLesson(id: number, run: Run) {
       JSON.stringify(summary),
       id
     );
+    scheduleAppleSync(); // new or changed due dates
   } catch (err) {
     if (!isCurrent()) return;
     const message = err instanceof Error ? err.message : String(err);
@@ -251,6 +247,7 @@ lessons.patch("/:id", async (c) => {
     db.prepare("UPDATE lessons SET subject_id = ? WHERE id = ?").run(subjectId, id);
   }
   if (title !== undefined) db.prepare("UPDATE lessons SET title = ? WHERE id = ?").run(title || DEFAULT_TITLE, id);
+  scheduleAppleSync(); // calendar events name the session and its subject
   return c.json(serialize(findLesson(id)!, false));
 });
 
@@ -334,6 +331,7 @@ lessons.delete("/", (c) => {
 
   const total = db.prepare("SELECT COUNT(*) AS n FROM lessons").get() as unknown as { n: number };
   db.exec("DELETE FROM segments; DELETE FROM lessons;");
+  scheduleAppleSync();
   return c.json({ deleted: total.n });
 });
 
@@ -349,6 +347,7 @@ lessons.delete("/:id", (c) => {
 
   db.prepare("DELETE FROM segments WHERE lesson_id = ?").run(id);
   db.prepare("DELETE FROM lessons WHERE id = ?").run(id);
+  scheduleAppleSync();
   return c.body(null, 204);
 });
 

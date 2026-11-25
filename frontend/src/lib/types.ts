@@ -51,3 +51,15 @@ export interface ChunkResult {
   skipped: boolean;
   text: string | null;
 }
+
+/** Writing due dates straight into Apple Calendar (backend/src/services/apple-calendar.ts). */
+export interface AppleCalendarStatus {
+  /** Only on macOS. */
+  supported: boolean;
+  enabled: boolean;
+  syncing: boolean;
+  calendarName: string;
+  lastSyncAt: string | null;
+  lastError: string | null;
+  events: number;
+}

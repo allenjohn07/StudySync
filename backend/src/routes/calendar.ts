@@ -1,18 +1,11 @@
 import { Hono } from "hono";
-import db from "../db.js";
-import { DEFAULT_TITLE, titleFromSummary } from "./lessons.js";
+import { setEnabled, status, syncAppleCalendar } from "../services/apple-calendar.js";
+import { dueItems, eventNotes, eventTitle } from "../services/due-items.js";
 
 // A live iCalendar feed of every assignment with a due date. Subscribe to it once (Apple Calendar, Outlook,
 // Thunderbird… on this computer) and assignments from new lectures show up by themselves.
 
 const calendar = new Hono();
-
-interface Row {
-  id: number;
-  title: string;
-  summary: string;
-  subject: string | null;
-}
 
 /** RFC 5545 text escaping. */
 const escape = (text: string) =>
@@ -34,7 +27,6 @@ function fold(line: string) {
   return parts.join("\r\n ");
 }
 
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const compact = (iso: string) => iso.replace(/-/g, "");
 function nextDay(iso: string) {
   const d = new Date(`${iso}T00:00:00Z`);
@@ -44,47 +36,26 @@ function nextDay(iso: string) {
 const stamp = () => new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 
 calendar.get("/calendar.ics", (c) => {
-  const rows = db
-    .prepare(
-      `SELECT l.id, l.title, l.summary, s.name AS subject
-       FROM lessons l LEFT JOIN subjects s ON s.id = l.subject_id
-       WHERE l.summary IS NOT NULL`
-    )
-    .all() as unknown as Row[];
-
   const now = stamp();
   const events: string[] = [];
-  for (const row of rows) {
-    let summary: { topics?: string[]; assignments?: { title: string; dueDate: string | null }[] };
-    try {
-      summary = JSON.parse(row.summary);
-    } catch {
-      continue;
-    }
-    const assignments = summary.assignments ?? [];
-    // the same name the app shows: one the student gave, or the topics
-    const sessionTitle = row.title === DEFAULT_TITLE ? titleFromSummary(summary.topics) : row.title;
-    assignments.forEach((a, i) => {
-      if (!a.dueDate || !ISO_DATE.test(a.dueDate)) return;
-      const subject = row.subject ? ` (${row.subject})` : "";
-      events.push(
-        "BEGIN:VEVENT",
-        `UID:studysync-${row.id}-${i}@studysync.local`,
-        `DTSTAMP:${now}`,
-        `DTSTART;VALUE=DATE:${compact(a.dueDate)}`,
-        `DTEND;VALUE=DATE:${compact(nextDay(a.dueDate))}`,
-        `SUMMARY:${escape(`Due: ${a.title}${subject}`)}`,
-        `DESCRIPTION:${escape(`Mentioned in "${sessionTitle}". Added by StudySync.`)}`,
-        "TRANSP:TRANSPARENT",
-        // a reminder at 9:00 the day before
-        "BEGIN:VALARM",
-        "ACTION:DISPLAY",
-        `DESCRIPTION:${escape(`Due tomorrow: ${a.title}`)}`,
-        "TRIGGER:-PT15H",
-        "END:VALARM",
-        "END:VEVENT"
-      );
-    });
+  for (const item of dueItems()) {
+    events.push(
+      "BEGIN:VEVENT",
+      `UID:${item.uid}@studysync.local`,
+      `DTSTAMP:${now}`,
+      `DTSTART;VALUE=DATE:${compact(item.dueDate)}`,
+      `DTEND;VALUE=DATE:${compact(nextDay(item.dueDate))}`,
+      `SUMMARY:${escape(eventTitle(item))}`,
+      `DESCRIPTION:${escape(eventNotes(item))}`,
+      "TRANSP:TRANSPARENT",
+      // a reminder at 9:00 the day before
+      "BEGIN:VALARM",
+      "ACTION:DISPLAY",
+      `DESCRIPTION:${escape(`Due tomorrow: ${item.title}`)}`,
+      "TRIGGER:-PT15H",
+      "END:VALARM",
+      "END:VEVENT"
+    );
   }
 
   const body = [
@@ -109,6 +80,23 @@ calendar.get("/calendar.ics", (c) => {
     "Content-Disposition": 'inline; filename="studysync.ics"',
     "Cache-Control": "no-cache",
   });
+});
+
+// Apple Calendar: write due dates straight into a "StudySync" calendar (macOS).
+calendar.get("/calendar/apple", (c) => c.json(status()));
+
+calendar.put("/calendar/apple", async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as { enabled?: unknown };
+  if (typeof body.enabled !== "boolean") return c.json({ error: "Send { enabled: true | false }" }, 400);
+  if (body.enabled && !status().supported) return c.json({ error: "Apple Calendar is only available on macOS" }, 400);
+  await setEnabled(body.enabled); // turning it on runs the first sync before answering
+  return c.json(status());
+});
+
+calendar.post("/calendar/apple/sync", async (c) => {
+  if (!status().enabled) return c.json({ error: "Apple Calendar isn't turned on" }, 409);
+  await syncAppleCalendar();
+  return c.json(status());
 });
 
 export default calendar;

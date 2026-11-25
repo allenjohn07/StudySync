@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import db, { type SubjectRow } from "../db.js";
+import { scheduleAppleSync } from "../services/apple-calendar.js";
 
 const subjects = new Hono();
 
@@ -50,6 +51,7 @@ subjects.delete("/:id", (c) => {
   db.prepare("UPDATE lessons SET subject_id = NULL WHERE subject_id = ?").run(id);
   const { changes } = db.prepare("DELETE FROM subjects WHERE id = ?").run(id);
   if (!changes) return c.json({ error: "Subject not found" }, 404);
+  scheduleAppleSync(); // its sessions' events lose the subject name
   return c.body(null, 204);
 });
 

@@ -1,4 +1,4 @@
-import type { ChunkResult, Lesson, Subject, SubjectColor, User } from "./types";
+import type { AppleCalendarStatus, ChunkResult, Lesson, Subject, SubjectColor, User } from "./types";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
 
@@ -73,4 +73,12 @@ export const subjectsApi = {
   list: () => request<Subject[]>("/subjects"),
   create: (data: { name: string; color?: SubjectColor }) => post<Subject>("/subjects", data),
   remove: (id: number) => request<void>(`/subjects/${id}`, { method: "DELETE" }),
+};
+
+export const appleCalendarApi = {
+  status: () => request<AppleCalendarStatus>("/calendar/apple"),
+  // Turning it on writes every due date into the "StudySync" calendar before answering.
+  setEnabled: (enabled: boolean) =>
+    request<AppleCalendarStatus>("/calendar/apple", { method: "PUT", body: JSON.stringify({ enabled }) }),
+  sync: () => post<AppleCalendarStatus>("/calendar/apple/sync"),
 };
