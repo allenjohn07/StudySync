@@ -91,9 +91,11 @@ Small and quick, `ease-out`, 150–300 ms:
 
 - **Dashboard (`app/dashboard/page.tsx`)** — modelled on oklch.fyi: edge-to-edge, `h-dvh`.
   - Header `h-14`, `bg-sidebar`, bottom hairline: sidebar toggle (`PanelLeft`) + `BrandMark` in a 272px column,
-    then a breadcrumb (subject dot, subject / session title) and, on the right, `ThemeToggle` + Log out.
+    then a breadcrumb (subject dot, subject / session title) and, on the right, the **Search… ⌘L** button (opens
+    `CommandPalette`, `components/command-palette.tsx`; ⌘L / ⌘K anywhere), `ThemeToggle` + Log out. Search lives only in the
+    palette, not in the sidebar.
   - `AppSidebar` (`components/app-sidebar.tsx`), 272px, open by default on desktop (remembered in `localStorage`),
-    an overlay on phones: "New recording" row (round ink plus icon that rotates on hover), search (`/` focuses it),
+    an overlay on phones: "New recording" row (round ink plus icon that rotates on hover), an **Upcoming** deadlines list,
     a `SUBJECTS` eyebrow, then one collapsible group per subject (color dot, name, count; chevron on hover) with its
     sessions indented under a guide line; the open session has an ink tick on that line. Info card and "Clear all
     sessions" pinned at the bottom.

@@ -1,18 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   ChevronRight,
   HardDrive,
   Mic,
   Plus,
-  Search,
   Trash2,
-  X,
 } from "lucide-react";
 import { CalendarSubscribe } from "@/components/calendar-actions";
 import { Button } from "@/components/ui/button";
-import { Kbd } from "@/components/ui/kbd";
 import {
   Popover,
   PopoverContent,
@@ -84,38 +81,11 @@ export function AppSidebar({
   onClearAll: () => void;
   className?: string;
 }) {
-  const [query, setQuery] = useState("");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [clearOpen, setClearOpen] = useState(false);
-  const searchRef = useRef<HTMLInputElement>(null);
   const working = sessions.some((s) => s.status === "recording" || s.status === "processing");
-
-  // "/" jumps to the search field (unless you're already typing somewhere).
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (e.key !== "/" || target.closest("input, textarea, [contenteditable=true]")) return;
-      e.preventDefault();
-      searchRef.current?.focus();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-
-  const needle = query.trim().toLowerCase();
-  const matches = (s: Lesson) =>
-    !needle ||
-    s.title.toLowerCase().includes(needle) ||
-    !!s.summary?.topics.some((t) => t.toLowerCase().includes(needle));
-  const groups = groupBySubject(subjects, sessions)
-    .map((g) => ({
-      ...g,
-      sessions: g.sessions.filter(matches),
-      nameMatches: !!needle && !!g.subject?.name.toLowerCase().includes(needle),
-    }))
-    .map((g) => (g.nameMatches ? { ...g, sessions: sessions.filter((s) => s.subjectId === g.subject?.id) } : g))
-    .filter((g) => !needle || g.sessions.length > 0);
+  const groups = groupBySubject(subjects, sessions);
 
   return (
     <aside
@@ -124,7 +94,7 @@ export function AppSidebar({
         className,
       )}
     >
-      <div className="flex flex-col gap-1 p-3">
+      <div className="p-3">
         <button
           type="button"
           onClick={onNew}
@@ -137,34 +107,10 @@ export function AppSidebar({
           New recording
         </button>
 
-        <label className="group/search relative flex h-9 items-center rounded-lg px-2.5 text-sm text-muted-foreground transition-colors focus-within:bg-sidebar-accent hover:bg-sidebar-accent">
-          <Search className="size-4 shrink-0" />
-          <input
-            ref={searchRef}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === "Escape" && (setQuery(""), e.currentTarget.blur())}
-            placeholder="Search"
-            aria-label="Search sessions and subjects"
-            className="ml-2.5 min-w-0 flex-1 bg-transparent text-foreground outline-none placeholder:text-muted-foreground"
-          />
-          {query ? (
-            <button
-              type="button"
-              aria-label="Clear search"
-              onClick={() => setQuery("")}
-              className="rounded p-0.5 hover:text-foreground"
-            >
-              <X className="size-3.5" />
-            </button>
-          ) : (
-            <Kbd className="group-focus-within/search:opacity-0">/</Kbd>
-          )}
-        </label>
       </div>
 
       <nav aria-label="Sessions" className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3 pb-3">
-        {!needle && <Upcoming sessions={sessions} subjects={subjects} locked={locked} onSelect={onSelect} />}
+        <Upcoming sessions={sessions} subjects={subjects} locked={locked} onSelect={onSelect} />
 
         <h2 className="label-mono px-2.5 pt-2 pb-1.5">Subjects</h2>
 
@@ -176,15 +122,11 @@ export function AppSidebar({
           </div>
         )}
 
-        {needle && groups.length === 0 && (
-          <p className="px-2.5 py-2 text-sm text-muted-foreground">Nothing matches “{query.trim()}”.</p>
-        )}
-
         {groups.map(({ subject, sessions: items }) => {
           const key = groupKey(subject);
           const hasActive = items.some((s) => s.id === activeId);
-          // Searching opens everything; otherwise a group is open unless you closed it (the open session's group stays open).
-          const open = !!needle || hasActive || !collapsed[key];
+          // A group is open unless you closed it; the open session's group always stays open.
+          const open = hasActive || !collapsed[key];
           return (
             <div key={key} className="flex flex-col">
               <button
