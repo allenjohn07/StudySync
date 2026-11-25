@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertCircle, Check, ChevronRight, LogOut, PanelLeft, Plus, RotateCw } from "lucide-react";
 import { AppSidebar, SessionTitle, whenLabel } from "@/components/app-sidebar";
 import { BrandMark } from "@/components/brand-mark";
 import { AddToCalendar } from "@/components/calendar-actions";
+import { CommandPalette, PaletteButton, usePaletteShortcut } from "@/components/command-palette";
 import { NewSessionDialog, type RecordingTarget } from "@/components/new-session-dialog";
 import { ScrollFade } from "@/components/scroll-fade";
 import { SummaryStream } from "@/components/summary-stream";
@@ -103,6 +104,8 @@ export default function DashboardPage() {
   const lessonPromiseRef = useRef<Promise<number | null>>(Promise.resolve(null));
 
   const [sidebarOpen, setSidebarOpen] = useState(initialSidebarOpen);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  usePaletteShortcut(useCallback(() => setPaletteOpen((o) => !o), []));
   const [dialog, setDialog] = useState<{ open: boolean; mode: RecordingTarget["mode"]; sessionId: number | null }>({
     open: false,
     mode: "new",
@@ -338,7 +341,8 @@ export default function DashboardPage() {
             )}
           </nav>
           <div className="ml-auto flex items-center gap-2">
-            <ThemeToggle />
+            <PaletteButton onClick={() => setPaletteOpen(true)} />
+            <ThemeToggle className="max-sm:hidden" />
             <Button variant="ghost" size="sm" className="gap-1.5" onClick={logout}>
               <LogOut className="size-3.5" /> <span className="max-sm:hidden">Log out</span>
             </Button>
@@ -593,6 +597,20 @@ export default function DashboardPage() {
           </section>
         </main>
       </div>
+
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        sessions={sessions}
+        subjects={subjects}
+        activeSession={lesson ?? null}
+        locked={recorder.recording}
+        onOpenSession={openSession}
+        onNewRecording={() => openDialog("new")}
+        onContinue={(id) => void handleStart({ mode: "continue", id })}
+        onToggleSidebar={() => toggleSidebar()}
+        onLogout={logout}
+      />
 
       <NewSessionDialog
         open={dialog.open}

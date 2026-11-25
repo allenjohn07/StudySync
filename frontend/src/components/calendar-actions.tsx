@@ -30,7 +30,7 @@ export function AddToCalendar({ item, index }: { item: DueItem; index: number })
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         render={
-          <Button variant="ghost" size="xs" className="-ml-2 gap-1.5 text-muted-foreground hover:text-foreground" />
+          <Button variant="ghost" size="xs" className="-ml-1 gap-1.5 text-muted-foreground hover:text-foreground" />
         }
       >
         <CalendarPlus /> Add to calendar

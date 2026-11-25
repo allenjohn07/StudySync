@@ -37,6 +37,7 @@ and no accounts or API keys are needed.
 - **Due dates in your calendar.** A live calendar feed of every assignment, an **Upcoming** list in the sidebar, and
   one-click **Add to calendar** (Google Calendar or a `.ics` file) on each assignment.
 - **Learn more.** Each topic links to Wikipedia, Khan Academy and YouTube.
+- **Search everything** with ⌘L (or ⌘K): sessions, transcripts, topics, subjects, deadlines and actions.
 - **Light and dark mode**, following your system setting by default.
 - **Private by design.** Transcription, summaries and storage all happen locally.
 

@@ -241,7 +241,7 @@ export function SummaryStream({
                   return (
                     <div
                       key={a.index}
-                      className="flex flex-col items-start gap-1.5"
+                      className="flex flex-wrap items-center gap-x-3 gap-y-1.5"
                     >
                       <strong className={s.body}>{text(a)}</strong>
                       {due && (
