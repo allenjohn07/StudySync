@@ -7,6 +7,7 @@ import { type DueItem, dueItems, eventNotes, eventTitle } from "./due-items.js";
 // replaces its events with the current list, so deleted or moved deadlines disappear or move too.
 //
 // The first sync makes macOS ask whether the app running the backend (Terminal, VS Code…) may control Calendar.
+// The script is AppleScript run by `osascript`.
 
 export const CALENDAR_NAME = "StudySync";
 const ENABLED_KEY = "apple_calendar_enabled";
@@ -18,53 +19,50 @@ const SYNC_TIMEOUT_MS = 120_000;
 
 export const supported = process.platform === "darwin";
 
-// JavaScript for Automation, run by osascript. Gets the items as JSON in argv[0] and the calendar name in argv[1].
+// AppleScript, run by osascript. (Calendar's JavaScript scripting failed with "Handler only handles single objects"
+// when given a calendar found by a search, so this addresses the calendar by name in AppleScript.)
 const SCRIPT = `
-function run(argv) {
-  const items = JSON.parse(argv[0]);
-  const name = argv[1];
-  const Cal = Application("Calendar");
-  const wasRunning = Cal.running();
-
-  let found = Cal.calendars.whose({ name: name })();
-  const cal = found.length ? found[0] : Cal.make({ new: "calendar", withProperties: { name: name } });
-
-  // Start from a clean slate: this calendar only ever holds StudySync's due dates.
-  const old = cal.events();
-  for (let i = old.length - 1; i >= 0; i--) old[i].delete();
-
-  for (const item of items) {
-    const p = item.date.split("-").map(Number);
-    const event = Cal.make({
-      new: "event",
-      at: cal.events,
-      withProperties: {
-        summary: item.summary,
-        description: item.notes,
-        startDate: new Date(p[0], p[1] - 1, p[2]),
-        endDate: new Date(p[0], p[1] - 1, p[2] + 1),
-        alldayEvent: true,
-      },
-    });
-    // a reminder at 9:00 the day before (15 hours before midnight, in minutes)
-    try {
-      Cal.make({ new: "displayAlarm", at: event.displayAlarms, withProperties: { triggerInterval: -900 } });
-    } catch (e) {}
-  }
-
-  if (!wasRunning) Cal.quit();
-  return String(items.length);
-}
+-- argv: calendar name, then 5 items per event: year, month, day, title, notes
+on run argv
+	set calName to item 1 of argv
+	set wasRunning to application "Calendar" is running
+	tell application "Calendar"
+		if not (exists calendar calName) then make new calendar with properties {name:calName}
+		set cal to calendar calName
+		-- start from a clean slate: this calendar only ever holds StudySync's due dates
+		delete every event of cal
+		set i to 2
+		set added to 0
+		repeat while i + 4 ≤ (count of argv)
+			set d to current date
+			set day of d to 1
+			set year of d to (item i of argv) as integer
+			set month of d to (item (i + 1) of argv) as integer
+			set day of d to (item (i + 2) of argv) as integer
+			set time of d to 0
+			set ev to make new event at end of events of cal with properties {summary:(item (i + 3) of argv), description:(item (i + 4) of argv), start date:d, end date:(d + 1 * days), allday event:true}
+			-- a reminder at 9:00 the day before (15 hours before midnight, in minutes)
+			make new display alarm at end of display alarms of ev with properties {trigger interval:-900}
+			set added to added + 1
+			set i to i + 5
+		end repeat
+	end tell
+	if not wasRunning then tell application "Calendar" to quit
+	return added
+end run
 `;
 
 function runScript(items: DueItem[]): Promise<number> {
-  const payload = JSON.stringify(
-    items.map((item) => ({ date: item.dueDate, summary: eventTitle(item), notes: eventNotes(item) }))
-  );
+  // argv for the script: the calendar name, then year, month, day, title and notes for each event
+  const args = [CALENDAR_NAME];
+  for (const item of items) {
+    const [year, month, day] = item.dueDate.split("-");
+    args.push(String(Number(year)), String(Number(month)), String(Number(day)), eventTitle(item), eventNotes(item));
+  }
   return new Promise((resolve, reject) => {
     execFile(
       "osascript",
-      ["-l", "JavaScript", "-e", SCRIPT, payload, CALENDAR_NAME],
+      ["-e", SCRIPT, ...args],
       { timeout: SYNC_TIMEOUT_MS },
       (err, stdout, stderr) => {
         if (!err) return resolve(Number(stdout.trim()) || 0);
