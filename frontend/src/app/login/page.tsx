@@ -62,15 +62,15 @@ export default function LoginPage() {
           <div className="dot-grid relative hidden overflow-hidden border-l border-border bg-muted/40 lg:flex lg:flex-col lg:justify-end dark:bg-black/20">
             <div className="relative flex min-h-0 flex-1 items-center justify-center px-12 pt-10">
               {/* sized by the space left over, keeping the drawing's proportions */}
-              <div className="relative aspect-[900/792] h-full max-h-[400px] max-w-full">
+              <div className="relative aspect-[848/640] h-full max-h-[360px] max-w-full">
                 <Illustration
-                  name="listening-class"
-                  alt="A student at a desk with eyes closed, listening, notes crossed out, a laptop recording the lecture"
+                  name="listening"
+                  alt="A student lying back with headphones on, notebook and pen put down"
                   eager
-                  sizes="460px"
+                  sizes="480px"
                 />
-                <Sticker name="headphones" color="blue" rotate={-10} size={44} float className="absolute top-[4%] left-[6%]" />
-                <Sticker name="sparkle" color="yellow" rotate={10} size={32} float delay={1200} className="absolute top-[8%] right-[8%]" />
+                <Sticker name="sparkle" color="yellow" rotate={10} size={32} float delay={1200} className="absolute top-[0%] left-[46%]" />
+                <Sticker name="headphones" color="blue" rotate={-10} size={44} float className="absolute top-[-4%] right-[-2%]" />
               </div>
             </div>
             <div className="relative z-10 flex shrink-0 flex-col gap-5 px-12 pt-8 pb-12">
