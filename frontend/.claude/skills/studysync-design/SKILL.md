@@ -151,5 +151,6 @@ The user wants the site to feel friendly and student-made, not like a dev tool, 
 Landing order: hero (text left; the `listening-class` drawing, made for the tagline: eyes closed listening, notes crossed out,
 laptop on REC, with three stickers in its open space) → demo band ("A
 lecture, turned into notes") → three alternating feature rows (checklist, notebook, private) → centred closing CTA ringed by floating stickers →
-slim footer (brand, three links, the `StudySync` watermark). The login page is fixed to one screen (`h-dvh`, no scroll); its panel shows the `listening-class` drawing, sized by the
-height left over (`aspect-[900/792] h-full max-h-[400px]`).
+slim footer (brand, three links, the `StudySync` watermark). The login page is fixed to one screen (`h-dvh`, no scroll); its panel shows the `listening` drawing (lying back
+with headphones; deliberately different from the hero's), sized by the height left over (`aspect-[848/640] h-full
+max-h-[360px]`).
