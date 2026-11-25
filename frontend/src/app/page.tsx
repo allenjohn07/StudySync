@@ -13,10 +13,9 @@ import { Button } from "@/components/ui/button";
 import { WritingGroup, WritingText, WritingWord, writingDelays } from "@/components/ui/writing-text";
 import { cn } from "@/lib/utils";
 
-// Sections fill the screen (dvh = real visible height, even with mobile browser bars).
-// The hero starts below the page margin and the frame's 1px border, so it is shorter by exactly that much:
-// its bottom edge then lands on the bottom of the screen and nothing from the next section peeks in.
-const HERO_SCREEN = "min-h-[calc(100dvh-0.75rem-1px)] sm:min-h-[calc(100dvh-1rem-1px)]";
+// The hero fills the screen under the 3.5rem header (dvh = real visible height, even with mobile browser bars),
+// so nothing from the next section peeks in.
+const HERO_SCREEN = "min-h-[calc(100dvh-3.5rem)]";
 
 // Hero headline: each word rises in after the previous one (longer words and full stops add a pause).
 const HERO_RISE_MS = 1000;
@@ -35,25 +34,24 @@ export default function RootPage() {
 
 function LandingPage() {
   return (
-    <div className="flex min-h-dvh bg-background p-3 sm:p-4">
-      <div className="w-full overflow-hidden rounded-[22px] border border-border bg-card">
-        <section className={cn(HERO_SCREEN, "flex flex-col")}>
-          <Nav />
-          <Hero />
-          <TranscribeBand className="mb-6 shrink-0 sm:mb-10" />
-        </section>
-        <WindowBand />
-        <Features />
-        <ClosingCta />
-        <Footer />
-      </div>
+    // Full width, edge to edge, like the dashboard.
+    <div className="min-h-dvh bg-card dark:bg-background">
+      <Nav />
+      <section className={cn(HERO_SCREEN, "flex flex-col")}>
+        <Hero />
+        <TranscribeBand className="mb-6 shrink-0 sm:mb-10" />
+      </section>
+      <WindowBand />
+      <Features />
+      <ClosingCta />
+      <Footer />
     </div>
   );
 }
 
 function Nav() {
   return (
-    <SiteHeader>
+    <SiteHeader sticky>
       <div className="flex items-center gap-2 text-sm font-medium sm:gap-3">
         <a
           href="#how-it-works"

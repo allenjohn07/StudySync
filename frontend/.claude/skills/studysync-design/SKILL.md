@@ -108,11 +108,14 @@ Small and quick, `ease-out`, 150–300 ms:
   inline field) and an optional name. "Continue a session" = search + radio list of finished sessions. Footer: the
   `Ctrl Ctrl` hint on the left, Cancel + "Start recording" (red dot) on the right. The last subject used is
   preselected.
-- **Landing / login**: still the rounded full-window card on a page margin (`p-3 sm:p-4`, `rounded-[22px] border
-  border-border bg-card`), sections sized in `dvh`. Hero: a small status pill above a huge semibold Geist headline
-  (red strike on "writing.", yellow mark on "listening."), muted lede, two CTAs. The demo band is `bg-muted/40
-  .dot-grid`, not yellow. Login's right panel is the same dotted neutral panel.
-- `SiteHeader` (`h-16`) is for landing/login only; the dashboard has its own header.
+- **Landing / login**: edge to edge like the dashboard (the user asked for one uniform full-width look; the old
+  rounded card on a page margin is gone). `SiteHeader` (`components/site-header.tsx`) is the same `h-14 bg-sidebar
+  border-b` bar as the dashboard header, sticky and slightly translucent on the landing page; the page itself is
+  `bg-card dark:bg-background`, like the dashboard's main area. Hero: a small status pill above a huge semibold Geist
+  headline (red strike on "writing.", yellow mark on "listening."), muted lede, two CTAs. The demo band is `bg-muted/40
+  .dot-grid`, not yellow. Login's right panel is the same dotted neutral panel and the page fits one screen.
+- Sidebar rows (New recording, Clear all sessions, subjects, sessions) are all full width (`w-full`) so their hover
+  fills the sidebar.
 
 ## Subjects
 

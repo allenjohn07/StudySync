@@ -25,8 +25,7 @@ export default function LoginPage() {
 
   return (
     // The whole page fits one screen: no scrolling, the illustration shrinks with the window height.
-    <div className="flex h-dvh overflow-hidden bg-background p-3 sm:p-4">
-      <div className="flex min-h-0 w-full flex-col overflow-hidden rounded-[22px] border border-border bg-card">
+    <div className="flex h-dvh flex-col overflow-hidden bg-card dark:bg-background">
         <SiteHeader>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -101,7 +100,6 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }
