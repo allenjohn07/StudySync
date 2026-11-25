@@ -218,7 +218,7 @@ export function SummaryStream({
                         <Badge
                           variant="highlight"
                           className={cn(
-                            "label-mono h-auto rounded-md px-2 py-0.5 font-medium normal-case tracking-normal text-highlight-foreground",
+                            "h-auto rounded-md px-2 py-0.5 font-mono text-[11px] font-medium text-highlight-foreground tabular-nums",
                             enter(due).className,
                           )}
                           style={enter(due).style}

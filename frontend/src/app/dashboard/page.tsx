@@ -500,8 +500,8 @@ export default function DashboardPage() {
                 )}
               </div>
               {summary && !summaryEmpty && !processing && (
-                <p className="flex h-7 shrink-0 items-center gap-1.5 rounded-full border border-border px-2.5 text-xs font-medium text-muted-foreground">
-                  <Check className="size-3.5" /> Saved
+                <p className="flex h-7 shrink-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  <Check className="size-4" /> Saved to your account
                 </p>
               )}
             </div>
