@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   CalendarClock,
   FileText,
@@ -134,12 +134,16 @@ export function CommandPalette({
   onLogout: () => void;
 }) {
   const [query, setQuery] = useState("");
+  // Set when an item is chosen: focus then stays put instead of jumping back to whatever was focused before
+  // (e.g. the previous session in the sidebar, which would show a focus ring as if it were still selected).
+  const choseRef = useRef(false);
   const { setTheme } = useTheme();
   const subjectById = new Map(subjects.map((s) => [s.id, s]));
   const due = upcomingDue(sessions, subjects);
 
   // Run an action, then close the palette (and clear the search for next time).
   const run = (action: () => void) => () => {
+    choseRef.current = true;
     onOpenChange(false);
     setQuery("");
     action();
@@ -151,6 +155,11 @@ export function CommandPalette({
       onOpenChange={(o) => {
         onOpenChange(o);
         if (!o) setQuery("");
+      }}
+      finalFocus={() => {
+        const chose = choseRef.current;
+        choseRef.current = false;
+        return !chose; // Esc / click outside: back to where you were; after choosing something: nowhere
       }}
       title="Search StudySync"
       description="Search sessions, subjects, topics, transcripts and actions"

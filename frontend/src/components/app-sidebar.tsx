@@ -169,8 +169,8 @@ export function AppSidebar({
                           onClick={() => onSelect(s.id)}
                           aria-current={active ? "page" : undefined}
                           className={cn(
-                            "flex w-full flex-col items-start gap-0.5 rounded-lg px-2.5 py-1.5 pr-8 text-left transition-colors duration-150 outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50",
-                            active && "bg-sidebar-accent",
+                            "flex w-full flex-col items-start gap-0.5 rounded-lg px-2.5 py-1.5 pr-8 text-left transition-colors duration-150 outline-none hover:bg-sidebar-accent/50 focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50",
+                            active && "bg-sidebar-accent hover:bg-sidebar-accent",
                           )}
                         >
                           {/* the open session gets a short marker on the guide line */}

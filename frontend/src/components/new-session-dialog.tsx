@@ -62,7 +62,8 @@ export function NewSessionDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-5 sm:max-w-[480px]">
+      {/* After starting, don't send focus back to the button that opened it (it would show a focus ring). */}
+      <DialogContent className="gap-5 sm:max-w-[480px]" finalFocus={(type) => (type === "keyboard" ? false : true)}>
         {open && (
           <DialogBody
             subjects={subjects}

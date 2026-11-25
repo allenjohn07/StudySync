@@ -35,12 +35,15 @@ function CommandDialog({
   children,
   className,
   showCloseButton = false,
+  finalFocus,
   ...props
 }: Omit<React.ComponentProps<typeof Dialog>, "children"> & {
   title?: string
   description?: string
   className?: string
   showCloseButton?: boolean
+  /** Where focus goes when it closes (see Base UI Dialog.Popup `finalFocus`). */
+  finalFocus?: React.ComponentProps<typeof DialogContent>["finalFocus"]
   children: React.ReactNode
 }) {
   return (
@@ -55,6 +58,7 @@ function CommandDialog({
           className
         )}
         showCloseButton={showCloseButton}
+        finalFocus={finalFocus}
       >
         {children}
       </DialogContent>
