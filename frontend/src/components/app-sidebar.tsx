@@ -99,7 +99,7 @@ export function AppSidebar({
           type="button"
           onClick={onNew}
           disabled={locked}
-          className="group/new flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm font-medium transition-[background-color,transform] duration-150 ease-out outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
+          className="group/new flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-sm font-medium transition-[background-color,transform] duration-150 ease-out outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
         >
           <span className="flex size-[18px] items-center justify-center rounded-full bg-foreground text-background transition-transform duration-200 ease-out group-hover/new:rotate-90">
             <Plus className="size-3" strokeWidth={3} />

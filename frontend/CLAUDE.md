@@ -27,8 +27,9 @@ and TanStack Query. The backend is in `../backend`; the root `README.md` has the
 - **Design system**: the guide is `.claude/skills/studysync-design/SKILL.md` (neutral greys in OKLCH, Geist, hairline
   borders, yellow used sparingly, light and dark mode via `next-themes`). Tokens live in `src/app/globals.css`
   (`:root` and `.dark`; Tailwind v4: no `tailwind.config`).
-- **Page frame**: the landing and login pages are a rounded full-window card on the page margin (`p-3 sm:p-4`), and
-  landing sections are sized in `dvh`. The dashboard is edge to edge (header + sidebar + main).
+- **Page frame**: every page is edge to edge, with no rounded card or page margin. Landing and login use `SiteHeader`
+  (`h-14`, `bg-sidebar`, the same bar as the dashboard header; sticky on the landing page) over a `bg-card
+  dark:bg-background` page, and landing sections are sized in `dvh`.
 - **Text effects**: `WritingText` / `WritingWord` (`components/ui/writing-text.tsx`) reveal titles word by word and
   `Words` reuses the effect for the live transcript; `ShimmeringText` marks things that are being generated.
   Their CSS is in `globals.css` and respects reduced motion.
