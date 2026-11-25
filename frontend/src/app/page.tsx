@@ -4,8 +4,8 @@ import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { Illustration, type IllustrationName } from "@/components/illustration";
 import { FitText } from "@/components/landing/fit-text";
-import { ListeningStreams } from "@/components/landing/listening-streams";
 import { LiveDemoWindow } from "@/components/landing/live-demo";
+import { TranscribeBand } from "@/components/landing/transcribe-band";
 import { SiteHeader } from "@/components/site-header";
 import { Sticker, type StickerColor, type StickerName } from "@/components/sticker";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -40,6 +40,7 @@ function LandingPage() {
         <section className={cn(HERO_SCREEN, "flex flex-col")}>
           <Nav />
           <Hero />
+          <TranscribeBand className="mb-6 shrink-0 sm:mb-10" />
         </section>
         <WindowBand />
         <Features />
@@ -72,12 +73,9 @@ function Nav() {
 
 function Hero() {
   return (
-    <div className="relative grid flex-1 items-center gap-12 overflow-hidden px-6 py-14 sm:px-14 lg:grid-cols-[1.1fr_1fr] lg:gap-8">
-      {/* a faint lecture transcript drifting behind everything */}
-      <ListeningStreams />
+    <div className="grid flex-1 items-center gap-12 px-6 pt-10 pb-4 sm:px-14 lg:grid-cols-[1.1fr_1fr] lg:gap-8">
 
-      {/* a soft clear patch behind the copy, so the drifting text never competes with it */}
-      <div className="relative z-10 flex flex-col items-start gap-7 before:absolute before:-inset-x-12 before:-inset-y-10 before:-z-10 before:rounded-[48px] before:bg-card before:blur-2xl">
+      <div className="flex flex-col items-start gap-7">
         <span className="inline-flex h-7 items-center gap-2 rounded-full border border-border bg-card px-3 text-[13px] text-muted-foreground shadow-xs dark:bg-white/[0.03]">
           <span className="size-1.5 rounded-full bg-emerald-500" />
           Made for students · runs on your laptop
@@ -136,19 +134,12 @@ function Hero() {
       </div>
 
       {/* The tagline as a picture: eyes closed, listening, notes crossed out, the laptop recording. Stickers in the open space. */}
-      <div className="relative z-10 mx-auto w-full max-w-[540px] max-lg:max-w-[400px]">
-        {/* a solid copy of the figure's outline, so the text passing behind it is hidden (the drawing's
-            light areas are transparent) */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-card [mask-image:url(/illustrations/listening-class-mask.png)] [mask-size:100%_100%]"
-        />
+      <div className="relative mx-auto w-full max-w-[520px] max-lg:max-w-[400px]">
         <Illustration
           name="listening-class"
           alt="A student at a desk with eyes closed, listening, notes crossed out, a laptop recording the lecture"
           eager
-          sizes="(min-width: 1024px) 540px, 80vw"
-          className="relative"
+          sizes="(min-width: 1024px) 520px, 80vw"
         />
         <Sticker name="bulb" color="green" rotate={10} size={46} float delay={900} className="absolute top-[10%] right-[8%]" />
         <Sticker name="sparkle" color="yellow" rotate={8} size={34} float delay={1800} className="absolute top-[-2%] right-[30%]" />

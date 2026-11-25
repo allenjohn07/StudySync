@@ -136,13 +136,12 @@ The user wants the site to feel friendly and student-made, not like a dev tool, 
 - **Copy stays short**: one-sentence bodies, a single short lede in the hero. Sections breathe (`py-28 sm:py-36`,
   `gap-28` between feature rows).
 
-- **Hero background streams** (`components/landing/listening-streams.tsx`): four faint lines of lecture transcript drift
-  across the whole hero on slow waves, alternating direction, behind everything (normal words `fill-foreground/[0.07]`,
-  key phrases `/[0.16]` semibold; edges faded). SVG `textPath`s with `startOffset` moved every frame (seamless loop,
-  static with reduced motion). Two things keep it from getting in the way: the copy column has a soft `bg-card` blurred
-  patch behind it (`before:` pseudo-element), and the drawing has a `bg-card` layer masked by its solid silhouette
-  (`listening-class-mask.png`) so text doesn't show through the figure's transparent light areas. The user rejected two
-  earlier versions (a ribbon under the hero; text flowing into the character's ear): keep it as quiet background.
+- **Transcribe band** (`components/landing/transcribe-band.tsx`, CSS in `globals.css`): a strip along the bottom of
+  the hero showing "sound in, words out". A waveform slides in from the left into a centred-left pill (pink mic
+  sticker, pulsing red dot, "Transcribing live"), and the transcript slides out of it to the right, key phrases
+  `font-semibold text-foreground`. Pure CSS: each track holds two copies and slides by 50% (`band-slide`), and the bars
+  also breathe (`band-bar`); both stop with reduced motion. Edges fade with `mask-image`. The user rejected three
+  earlier versions (a wavy text ribbon, text flowing into the character's ear, faint text across the whole background).
 
 Landing order: hero (text left; the `listening-class` drawing, made for the tagline: eyes closed listening, notes crossed out,
 laptop on REC, with three stickers in its open space) → demo band ("A

@@ -314,3 +314,39 @@
     animation: none;
   }
 }
+
+/* Hero "sound in, words out" band (components/landing/transcribe-band.tsx). Each track holds two identical
+   copies; sliding it by half its width (left to right) loops seamlessly. */
+@keyframes band-slide {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes band-bar {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.45);
+  }
+}
+
+.band-track {
+  animation: band-slide linear infinite;
+}
+
+.band-bar {
+  animation: band-bar 1.3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .band-track,
+  .band-bar {
+    animation: none;
+  }
+}
