@@ -1,0 +1,24 @@
+{
+  "name": "studysync",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Record a class, get a live transcript and a study summary. Runs locally with Whisper and Ollama.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "scripts": {
+    "postinstall": "npm install --prefix backend && npm install --prefix frontend",
+    "setup": "node scripts/setup.mjs",
+    "dev": "concurrently --names ollama,api,web --prefix-colors magenta,blue,green --prefix \"[{name}]\" \"node scripts/ollama.mjs\" \"npm:dev:backend\" \"npm:dev:frontend\"",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix backend && npm run build --prefix frontend",
+    "typecheck": "npm run typecheck --prefix backend && npm run typecheck --prefix frontend",
+    "lint": "npm run lint --prefix frontend",
+    "seed": "npm run seed --prefix backend"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.7"
+  }
+}

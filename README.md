@@ -1,192 +1,264 @@
 # StudySync
 
-Record a class, watch the transcript appear as you speak, and get a plain-language summary
-when you stop: topics, key points, assignments with due dates, tasks, and a study tip.
+**Record a class. Get the notes.**
 
-Everything runs **locally on your machine**: speech recognition with Whisper and the summary
-with a small model through Ollama. No audio or text leaves your computer, and no API keys are needed.
+StudySync records a lecture in the browser, transcribes it live, and when the class ends turns the transcript into a
+plain-language study summary: topics, key points, assignments with due dates, tasks and a study tip. Due dates flow
+into your calendar, and every topic comes with places to learn more.
+
+Everything runs on your own computer. Speech recognition uses [whisper.cpp](https://github.com/ggerganov/whisper.cpp)
+and summaries use a small language model through [Ollama](https://ollama.com). No audio or text leaves your machine,
+and no accounts or API keys are needed.
+
+---
+
+## Contents
+
+- [Features](#features)
+- [Quick start](#quick-start)
+- [Commands](#commands)
+- [Using StudySync](#using-studysync)
+- [How it works](#how-it-works)
+- [Configuration](#configuration)
+- [API reference](#api-reference)
+- [Project structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
+- [Known limitations](#known-limitations)
+
+## Features
+
+- **Live transcript.** Words appear a second or two after they are spoken, with timestamps.
+- **Study summary.** Topics, key points, assignments, tasks and a study tip, written when you stop recording. Long and
+  short recordings are summarized to a matching length.
+- **Subjects.** Every recording is filed under a subject or class (Biology 101, Calculus II…). The sidebar groups
+  sessions by subject and is searchable.
+- **Continue a session.** Pick up an earlier session; the new recording is added to its transcript and the summary is
+  rewritten from the whole thing.
+- **Due dates in your calendar.** A live calendar feed of every assignment, an **Upcoming** list in the sidebar, and
+  one-click **Add to calendar** (Google Calendar or a `.ics` file) on each assignment.
+- **Learn more.** Each topic links to Wikipedia, Khan Academy and YouTube.
+- **Light and dark mode**, following your system setting by default.
+- **Private by design.** Transcription, summaries and storage all happen locally.
+
+## Quick start
+
+### Requirements
+
+| | |
+| --- | --- |
+| **OS** | macOS (tested on Apple Silicon). Linux works if you install the same tools with your package manager. |
+| **Node.js** | 22.5 or newer (tested on 24). The backend uses the built-in `node:sqlite`. |
+| **Tools** | `ffmpeg`, `whisper-cpp` and `ollama`, installed with [Homebrew](https://brew.sh) below. |
+| **Memory** | About 8 GB at peak including the OS, so a 16 GB machine is comfortable. |
+| **Disk** | About 3 GB for the two models. |
+
+### Install and run
+
+```bash
+# 1. System tools
+brew install ffmpeg whisper-cpp ollama
+
+# 2. JavaScript dependencies (installs the root, backend and frontend in one go)
+npm install
+
+# 3. One-time setup: creates the settings files and downloads both models (~2.6 GB)
+npm run setup
+
+# 4. Start everything
+npm run dev
+```
+
+`npm run dev` starts Ollama (unless it is already running), the API on <http://localhost:4000> and the web app on
+<http://localhost:3000>, with their logs in one terminal. Press `Ctrl+C` to stop all of them. If Ollama was already
+running before (for example from the menu-bar app), it is left running.
+
+Open <http://localhost:3000>, choose **Log in**, then **New recording**, pick a subject and allow the microphone.
+
+`npm run setup` is safe to run again at any time: it checks your tools and only does the steps that are missing.
+
+## Commands
+
+Run these from the repository root.
+
+| Command | What it does |
+| --- | --- |
+| `npm install` | Installs dependencies for the root, `backend/` and `frontend/` |
+| `npm run setup` | Checks tools, creates `backend/.env` and `frontend/.env.local`, downloads the Whisper model, pulls the Ollama model |
+| `npm run dev` | Starts Ollama, the API and the web app together |
+| `npm run seed` | **Deletes all subjects and sessions** and loads demo data (four subjects, seven sessions) |
+| `npm run typecheck` | Type-checks the backend and the frontend |
+| `npm run lint` | Lints the frontend |
+| `npm run build` | Builds the backend (`backend/dist`) and a production frontend |
+
+You can still run a single part on its own, for example `npm run dev:backend` or `npm run dev:frontend`.
+
+## Using StudySync
+
+1. **Start a recording.** Click **New recording** (or tap `Ctrl` twice). Choose a subject or create one, and optionally
+   name the session; unnamed sessions are named after their topics. To add to an earlier session instead, choose
+   **Continue a session**.
+2. **Listen.** The transcript fills in on the left while you record.
+3. **Stop** (or tap `Ctrl` twice again). The summary is written on the right, usually within 10 to 30 seconds.
+4. **Review later.** Open any session from the sidebar to see its transcript and summary again.
+
+### Calendar
+
+The backend serves every assignment that has a due date as a calendar feed at
+<http://localhost:4000/api/calendar.ics>. Each one becomes an all-day event with a reminder at 9:00 the day before.
+
+- **Subscribe once** (recommended): click the calendar icon next to **Upcoming** in the sidebar and choose
+  **Subscribe**, or add the URL in Apple Calendar via *File → New Calendar Subscription*. New due dates then appear on
+  their own. Calendars refresh the feed about once an hour while StudySync is running.
+- **One at a time:** every assignment in a summary has **Add to calendar**, which opens a prefilled Google Calendar
+  event or downloads a `.ics` file. Use this for Google Calendar, which cannot subscribe to a feed on your own computer.
+
+### Demo data
+
+`npm run seed` replaces everything with sample subjects and sessions, which is handy for trying the interface. It
+deletes your existing sessions first.
 
 ## How it works
 
 ```
-Browser (audio only, cut into ~8 s pieces while you record)
-   │  POST /api/lessons/:id/chunks   (one request per piece)
-   ▼
-Hono backend ── ffmpeg ──▶ 16 kHz mono wav ──▶ whisper.cpp (large-v3-turbo) ──▶ transcript lines
-   │                                                                           │ saved in SQLite
-   │  POST /api/lessons/:id/finish                                            ▼
-   └──────────────▶ Ollama (llama3.2:3b) ──▶ JSON summary ──▶ SQLite ──▶ shown in the browser
+Browser ── audio in ~4 s pieces, plus a live preview every 1.5 s ──▶ POST /api/lessons/:id/chunks
+                                                                          │
+Backend (Hono) ── ffmpeg ─▶ 16 kHz mono WAV ─▶ whisper.cpp ─▶ transcript lines ─▶ SQLite
+                                                                          │
+Stop ──▶ POST /api/lessons/:id/finish ─▶ Ollama (llama3.2:3b) ─▶ JSON summary ─▶ SQLite ─▶ browser
 ```
 
-1. **Start recording** on the demo page. A lesson (session) is created.
-2. Every ~8 seconds the browser sends the latest audio piece. The backend transcribes it and the
-   line shows up on the left with its timestamp (expect a delay of roughly 8 to 12 seconds).
-3. **Stop** sends the last piece and asks the backend to finish. It joins the transcript lines,
-   asks the Ollama model for a structured summary, and saves it.
-4. The browser polls the lesson and fills in the summary on the right. Sections with nothing
-   in them (for example no assignments mentioned) are hidden. Even a single spoken sentence gets
-   a topic and a key point.
-5. Every session is saved. The sidebar lists past sessions: open one to see its transcript and
-   summary again, start a new one, or delete one.
+- The browser records audio only and cuts it into short, self-contained pieces. While a piece is being recorded, a
+  growing preview of it is sent so words show up quickly; the finished piece replaces the preview.
+- The backend converts each piece with ffmpeg and transcribes it with whisper.cpp. Silence markers and the short
+  phrases Whisper tends to invent over silence are dropped.
+- When you stop, the backend joins the transcript and asks the Ollama model for a summary in a fixed JSON shape,
+  validated with Zod. Small models are poor at date arithmetic, so the prompt includes a list of upcoming dates to copy
+  from.
+- Heavy work runs one job at a time, so Whisper and the language model never compete for memory.
 
-## Pages
+### Stack
 
-| Route | What it is |
+| Layer | Technology |
 | --- | --- |
-| `/` | Landing page |
-| `/login` | A single "Log in" button. Login state is a flag in `localStorage` for now (no real auth yet) |
-| `/dashboard` | The app: live recording, live transcript, summary, and a sidebar of sessions grouped by subject. **New recording** asks which subject (or class) it belongs to, or lets you continue an earlier session |
-| `/dashboard/demo` | Old address; redirects to `/dashboard` |
-
-## Stack
-
-| Layer | Choice |
-| --- | --- |
-| Frontend | Next.js 16 (App Router), TypeScript, Tailwind CSS v4, shadcn/ui on Base UI, TanStack Query |
-| Backend | Node.js + Hono + TypeScript (ESM) on port 4000 |
+| Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, shadcn/ui on Base UI, TanStack Query |
+| Backend | Node.js, Hono, TypeScript (ESM) |
 | Database | SQLite through Node's built-in `node:sqlite` (one file: `backend/studysync.db`) |
-| Speech to text | whisper.cpp with the `ggml-large-v3-turbo-q5_0` model, audio converted by ffmpeg |
-| Summary | Ollama running `llama3.2:3b`, answering in a fixed JSON schema (validated with Zod) |
+| Speech to text | whisper.cpp with `ggml-large-v3-turbo-q5_0`, audio converted by ffmpeg |
+| Summaries | Ollama running `llama3.2:3b` |
 
-Peak memory is roughly 8 GB including macOS, so it runs comfortably on a 16 GB Mac.
-Whisper and the language model never run at the same time: jobs are processed one at a time.
+## Configuration
 
-## Setup (once)
+`npm run setup` creates both settings files from their examples. The defaults match the setup steps, so most people
+never need to edit them.
 
-You need Node.js 24 (tested; the backend uses the built-in `node:sqlite`) and [Homebrew](https://brew.sh).
+### Backend (`backend/.env`)
 
-```bash
-# 1. Tools
-brew install ffmpeg whisper-cpp ollama
-
-# 2. Summary model (about 2 GB)
-ollama pull llama3.2:3b
-
-# 3. Speech model (about 574 MB), saved where the backend expects it
-mkdir -p backend/models
-curl -L -o backend/models/ggml-large-v3-turbo-q5_0.bin \
-  https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin
-
-# 4. Install dependencies and create the backend settings file
-cd backend && cp .env.example .env && npm install && cd ..
-cd frontend && npm install && cd ..
-```
-
-The defaults in `.env.example` match the steps above, so you normally don't need to edit `.env`.
-
-## Run it
-
-Use three terminal tabs:
-
-```bash
-ollama serve                      # skip if Ollama is already running
-cd backend && npm run dev         # http://localhost:4000
-cd frontend && npm run dev        # http://localhost:3000
-```
-
-Open <http://localhost:3000>, click **Log in**, then **New recording**, pick a subject and allow the
-microphone. Say something, press **Stop**, and wait a few seconds for the summary.
-
-**Due dates in your calendar.** The backend serves a live calendar feed of every assignment at
-<http://localhost:4000/api/calendar.ics>. Subscribe to it once (the calendar icon next to **Upcoming** in the sidebar,
-or *File → New Calendar Subscription* in Apple Calendar) and new due dates appear by themselves, with a reminder the
-day before. Google Calendar can't reach your laptop, so each assignment also has **Add to calendar** (a prefilled
-Google Calendar event or a `.ics` file). Each summary ends with **Learn more** links (Wikipedia, Khan Academy, YouTube)
-for its topics.
-
-To start over with demo data (four subjects and a handful of sessions), run `cd backend && npm run seed`.
-It deletes every subject and session first.
-
-To shut down, press `Ctrl+C` in each tab. Your sessions stay in `backend/studysync.db`.
-
-## Configuration (`backend/.env`)
-
-| Variable | Default | Meaning |
+| Variable | Default | Description |
 | --- | --- | --- |
-| `PORT` | `4000` | Backend port |
+| `PORT` | `4000` | API port |
 | `FRONTEND_URL` | `http://localhost:3000` | Origin allowed by CORS |
-| `DB_PATH` | `./studysync.db` | SQLite file, relative to the folder you start the backend from |
+| `DB_PATH` | `./studysync.db` | SQLite file, relative to `backend/` |
 | `WHISPER_BIN` | `whisper-cli` | whisper.cpp command |
 | `WHISPER_MODEL_PATH` | `./models/ggml-large-v3-turbo-q5_0.bin` | Whisper model file |
 | `FFMPEG_BIN` | `ffmpeg` | ffmpeg command |
 | `OLLAMA_URL` | `http://localhost:11434` | Ollama server |
 | `OLLAMA_MODEL` | `llama3.2:3b` | Model used for summaries |
-| `OLLAMA_TIMEOUT_MS` | `90000` | How long to wait for Ollama before the summary is marked as failed |
+| `OLLAMA_TIMEOUT_MS` | `90000` | How long to wait for a summary before marking it as failed |
 
-Quality too low, or too slow? Swap models without touching code: another Whisper model (`ggml-tiny.en.bin` or
-`ggml-small.en.bin`, already downloaded in `backend/models/`, are faster but less accurate) via `WHISPER_MODEL_PATH`, or a smaller/larger Ollama model via `OLLAMA_MODEL` (affects memory and speed).
+### Frontend (`frontend/.env.local`)
 
-## API
+| Variable | Default | Description |
+| --- | --- | --- |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:4000/api` | Where the web app finds the API |
 
-All routes are under `/api` except the health check.
+### Choosing models
 
-| Method and path | Purpose |
-| --- | --- |
-| `GET /health` | Health check |
-| `POST /api/lessons` | Start a session, returns `{ id }` |
-| `POST /api/lessons/:id/chunks` | Send one audio piece (multipart: `audio`, `seq`, `start`) |
-| `POST /api/lessons/:id/finish` | Stop recording and write the summary |
-| `POST /api/lessons/:id/resummarize` | Write the summary again from the saved transcript (after a failure, or if it is stuck) |
-| `GET /api/lessons` | List sessions, newest first |
-| `GET /api/lessons/:id` | One session: status, transcript lines, summary |
-| `DELETE /api/lessons/:id` | Delete a finished session (409 while it is recording or processing) |
+Trade accuracy for speed without changing code:
 
-A session's `status` goes `recording` → `processing` → `done` (or `error`).
+- **Speech:** point `WHISPER_MODEL_PATH` at a smaller model such as `ggml-small.en.bin` or `ggml-tiny.en.bin`
+  (download them from the [whisper.cpp models page](https://huggingface.co/ggerganov/whisper.cpp)).
+- **Summaries:** set `OLLAMA_MODEL` to any model you have pulled with `ollama pull`. Larger models write better
+  summaries but use more memory and take longer.
 
-## Project layout
+## API reference
 
-The repository has two folders and this README.
+All routes are served under `/api`, except the health check.
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/health` | Health check |
+| `GET` | `/api/lessons` | List sessions, newest first |
+| `POST` | `/api/lessons` | Start a session. Body: `{ subjectId?, title? }`. Returns `{ id }` |
+| `GET` | `/api/lessons/:id` | One session: status, transcript lines and summary |
+| `PATCH` | `/api/lessons/:id` | Rename a session or move it to another subject. Body: `{ title?, subjectId? }` |
+| `POST` | `/api/lessons/:id/chunks` | Upload an audio piece (multipart: `audio`, `seq`, `start`, `final`) |
+| `POST` | `/api/lessons/:id/finish` | Stop recording and write the summary |
+| `POST` | `/api/lessons/:id/resume` | Continue a finished session |
+| `POST` | `/api/lessons/:id/resummarize` | Write the summary again from the saved transcript |
+| `DELETE` | `/api/lessons/:id` | Delete a session (refused while it is being processed) |
+| `DELETE` | `/api/lessons` | Delete every session (refused while one is recording or processing) |
+| `GET` | `/api/subjects` | List subjects |
+| `POST` | `/api/subjects` | Create a subject. Body: `{ name, color? }`. Returns the existing one if the name is taken |
+| `DELETE` | `/api/subjects/:id` | Delete a subject; its sessions become unsorted |
+| `GET` | `/api/calendar.ics` | iCalendar feed of every assignment with a due date |
+
+A session's `status` moves from `recording` to `processing` to `done`, or to `error` if something fails.
+
+## Project structure
 
 ```
-backend/                  Hono API (port 4000)
-  src/app.ts              Hono app, CORS, routes
-  src/index.ts            Server entry point
-  src/db.ts               SQLite setup: subjects, lessons and segments tables
-  src/routes/lessons.ts   Session routes (create, continue, rename/move) and the job queue
-  src/routes/subjects.ts  Subjects (classes) that group sessions
-  src/routes/calendar.ts  Live iCalendar feed of due dates (/api/calendar.ics)
-  src/seed.ts             `npm run seed`: wipes the database and adds demo data
-  src/services/           transcribe.ts (ffmpeg + whisper.cpp), summarize.ts (Ollama)
-  models/                 Whisper model file (git-ignored, you download it)
-frontend/                 Next.js app (port 3000)
-  src/app/                Pages: landing, login, dashboard
-  src/components/         UI primitives (shadcn) and shared pieces
-  src/hooks/              use-audio-recorder, use-lessons, use-subjects, use-local-auth
-  src/lib/                api.ts (typed fetch client), types.ts, subjects.ts
-  src/design/             Original HTML mockups
-  .claude/skills/         The design guide for AI coding assistants
-  CLAUDE.md               Frontend conventions
+.
+├── package.json            Root scripts: npm run setup / dev / seed / …
+├── scripts/
+│   ├── setup.mjs           One-time setup (tools check, settings files, models)
+│   └── ollama.mjs          Starts Ollama for `npm run dev` unless it is already running
+├── backend/                Hono API (port 4000)
+│   ├── src/
+│   │   ├── index.ts        Server entry point
+│   │   ├── app.ts          App, CORS and routes
+│   │   ├── db.ts           SQLite schema and migrations
+│   │   ├── seed.ts         Demo data (`npm run seed`)
+│   │   ├── routes/         lessons.ts, subjects.ts, calendar.ts
+│   │   └── services/       transcribe.ts (ffmpeg + whisper.cpp), summarize.ts (Ollama)
+│   └── models/             Whisper model (downloaded by setup, not committed)
+└── frontend/               Next.js app (port 3000)
+    ├── src/app/            Pages: landing, login, dashboard
+    ├── src/components/     App components and UI primitives (shadcn/ui)
+    ├── src/hooks/          Data and recording hooks
+    ├── src/lib/            API client, types, calendar and resource helpers
+    ├── public/illustrations/  Landing page artwork
+    ├── .claude/skills/     Design system guide
+    └── CLAUDE.md           Frontend conventions
 ```
 
-Each folder has its own `.gitignore`.
-
-## Look inside the database
+To look inside the database:
 
 ```bash
-cd backend
-sqlite3 -header -column studysync.db
-```
-```sql
-SELECT id, title, status, created_at FROM lessons ORDER BY id DESC;
-SELECT lesson_id, seq, start_sec, text FROM segments ORDER BY lesson_id, seq;
+sqlite3 -header -column backend/studysync.db "SELECT id, title, status, created_at FROM lessons ORDER BY id DESC;"
 ```
 
 ## Troubleshooting
 
-| Symptom | Likely cause |
+| Symptom | Fix |
 | --- | --- |
-| "Could not run ffmpeg" or "Could not run whisper-cli" | The tool isn't installed or not on your `PATH`. Check `ffmpeg -version` and `whisper-cli --help` |
-| Error about the model file | `backend/models/ggml-large-v3-turbo-q5_0.bin` is missing: redo the speech model download |
-| "Ollama returned…" or "fetch failed" | Ollama isn't running: start `ollama serve` |
-| Stuck on "Summarizing…" | Ollama is busy or stalled. After 90 s the summary fails; press **Summarize again** (or **Try again** if it is taking long) |
-| "Couldn't reach the backend" | Backend isn't running on port 4000 |
-| "No speech was detected" | Whisper heard nothing: check that the right microphone is selected |
-| Phone shows "listening" | macOS picked your iPhone as the microphone (Continuity). Switch the input to your Mac in System Settings → Sound |
+| `npm run setup` reports a missing tool | Install it with Homebrew (`brew install ffmpeg whisper-cpp ollama`) and run setup again |
+| "Could not run ffmpeg" or "Could not run whisper-cli" | The tool is not on your `PATH`. Check with `ffmpeg -version` and `whisper-cli --help` |
+| Error about the Whisper model file | Run `npm run setup` to download it again |
+| "Ollama returned…" or "fetch failed" when summarizing | Ollama is not running or the model is missing. `npm run dev` starts it; `npm run setup` pulls the model |
+| `listen tcp 127.0.0.1:11434: bind: address already in use` | Ollama is already running, so there is nothing to start. `npm run dev` detects this and uses it |
+| Stuck on "Summarizing…" | Ollama is busy or stalled. After 90 seconds the summary fails; use **Summarize again** or **Try again** |
+| "Couldn't reach the backend" | The API is not running on port 4000. Start it with `npm run dev` |
+| "No speech was detected" | Check that the right microphone is selected |
+| macOS picks your iPhone as the microphone | Continuity Camera is active. Choose your Mac's microphone in *System Settings → Sound → Input* |
 
-## Limits
+## Known limitations
 
-- No real authentication yet: login is a `localStorage` flag, and all sessions are visible to anyone using the app.
-- Long recordings: the summary only reads roughly the first 24,000 characters of the transcript.
-- Words at the boundary between two audio pieces can be clipped, and the Whisper model still makes occasional mistakes.
-- Audio itself is not stored, only the transcript and summary.
-- No automated tests yet.
+- **No real accounts yet.** "Log in" sets a flag in the browser, and everyone using the computer sees the same
+  sessions.
+- **Long lectures:** the summary reads roughly the first 24,000 characters of the transcript.
+- **Accuracy:** Whisper occasionally mishears words, especially at the boundary between two audio pieces, and the
+  summary is only as accurate as the dates and assignments the model picks out.
+- **Audio is not kept.** Only the transcript and summary are saved.
+- **Calendar subscriptions** only refresh while StudySync is running, and Google Calendar cannot subscribe to a feed on
+  your own computer.
+- **No automated tests yet.**
