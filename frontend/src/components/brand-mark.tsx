@@ -1,22 +1,26 @@
 import { cn } from "@/lib/utils";
 
-function LogoMark() {
+/** The logo: a small ink tile with three yellow soundwave bars. */
+export function LogoMark({ className }: { className?: string }) {
   return (
-    <div className="flex size-[30px] shrink-0 items-center justify-center gap-[3px] rounded-full bg-foreground sm:size-[38px]">
-      <span className="h-2 w-[3px] rounded-[2px] bg-highlight sm:h-[10px]" />
-      <span className="h-3.5 w-[3px] rounded-[2px] bg-highlight sm:h-[18px]" />
-      <span className="h-2.5 w-[3px] rounded-[2px] bg-highlight sm:h-[12px]" />
-    </div>
+    <span
+      className={cn(
+        "flex size-7 shrink-0 items-center justify-center gap-[2.5px] rounded-[9px] bg-neutral-900 shadow-[inset_0_1px_0_oklch(1_0_0/0.15),0_1px_2px_oklch(0_0_0/0.15)] dark:bg-neutral-800 dark:ring-1 dark:ring-white/10",
+        className,
+      )}
+    >
+      <span className="h-[7px] w-[2.5px] rounded-full bg-highlight" />
+      <span className="h-[13px] w-[2.5px] rounded-full bg-highlight" />
+      <span className="h-[9px] w-[2.5px] rounded-full bg-highlight" />
+    </span>
   );
 }
 
 export function BrandMark({ className }: { className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-2 sm:gap-2.5", className)}>
+    <span className={cn("inline-flex items-center gap-2.5", className)}>
       <LogoMark />
-      <span className="font-display text-xl font-extrabold tracking-[-0.03em] sm:text-[26px]">
-        StudySync
-      </span>
+      <span className="text-[15px] font-semibold tracking-[-0.01em]">StudySync</span>
     </span>
   );
 }

@@ -71,11 +71,11 @@ export function summaryRevealMs(s: SummaryData) {
 }
 
 const SIZES = {
-  md: { body: "text-base", heading: "gap-6", pill: "text-base" },
+  md: { body: "text-[15px]", heading: "gap-6", pill: "text-[13px]" },
   lg: {
-    body: "text-lg sm:text-xl",
-    heading: "gap-7",
-    pill: "text-base sm:text-lg",
+    body: "text-[15px] sm:text-base",
+    heading: "gap-8",
+    pill: "text-[13px]",
   },
 } as const;
 
@@ -166,7 +166,7 @@ export function SummaryStream({
               <Badge
                 key={t.index}
                 variant="outline"
-                className={cn("h-auto px-3.5 py-1", s.pill, enter(t).className)}
+                className={cn("h-auto px-2.5 py-1", s.pill, enter(t).className)}
                 style={enter(t).style}
               >
                 {t.words.join(" ")}
@@ -183,7 +183,7 @@ export function SummaryStream({
               <li
                 key={p.index}
                 className={cn(
-                  "relative pl-5 leading-snug before:absolute before:top-[0.6em] before:left-px before:size-1.5 before:bg-foreground",
+                  "relative pl-5 leading-snug before:absolute before:top-[0.55em] before:left-0.5 before:size-1.5 before:rounded-full before:bg-muted-foreground/50",
                   s.body,
                   enter(p).className,
                 )}
@@ -218,7 +218,7 @@ export function SummaryStream({
                         <Badge
                           variant="highlight"
                           className={cn(
-                            "label-mono h-auto rounded-[6px] px-2.5 py-0.5 font-bold normal-case tracking-normal",
+                            "h-auto rounded-md px-2 py-0.5 font-mono text-[11px] font-medium text-highlight-foreground tabular-nums",
                             enter(due).className,
                           )}
                           style={enter(due).style}
@@ -270,7 +270,9 @@ export function SummaryStream({
 
       {tip && (
         <Section title="Study tip" {...enter(tip)}>
-          <p className={cn("leading-snug", s.body)}>{text(tip)}</p>
+          <p className={cn("rounded-xl border border-border bg-muted/50 px-4 py-3 leading-snug dark:bg-white/[0.03]", s.body)}>
+            {text(tip)}
+          </p>
         </Section>
       )}
     </div>

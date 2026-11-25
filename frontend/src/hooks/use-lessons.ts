@@ -4,6 +4,31 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { lessonsApi } from "@/lib/api";
 import type { Lesson } from "@/lib/types";
 
+export function useResumeLesson() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: lessonsApi.resume,
+    onSuccess: (_data, id) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["lessons", id] }),
+        queryClient.invalidateQueries({ queryKey: LIST_KEY }),
+      ]),
+  });
+}
+
+export function useUpdateLesson() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { id: number; subjectId?: number | null; title?: string }) =>
+      lessonsApi.update(v.id, { subjectId: v.subjectId, title: v.title }),
+    onSuccess: (_data, v) =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["lessons", v.id] }),
+        queryClient.invalidateQueries({ queryKey: LIST_KEY }),
+      ]),
+  });
+}
+
 export function useCreateLesson() {
   const queryClient = useQueryClient();
   return useMutation({

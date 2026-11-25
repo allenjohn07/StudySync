@@ -1,4 +1,4 @@
-import type { ChunkResult, Lesson, User } from "./types";
+import type { ChunkResult, Lesson, Subject, SubjectColor, User } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
 
@@ -45,7 +45,12 @@ export const authApi = {
 };
 
 export const lessonsApi = {
-  create: () => post<{ id: number }>("/lessons"),
+  // Without a title, the session is named after its topics once it is summarized.
+  create: (data: { subjectId: number | null; title?: string }) => post<{ id: number }>("/lessons", data),
+  // Keep recording into a finished session: the new part is added after its transcript.
+  resume: (id: number) => post<{ id: number }>(`/lessons/${id}/resume`),
+  update: (id: number, data: { subjectId?: number | null; title?: string }) =>
+    request<Lesson>(`/lessons/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
   // `final` false = a growing preview of the piece still being recorded; true = the finished piece.
   addChunk: (id: number, audio: Blob, seq: number, start: number, final: boolean) => {
     const form = new FormData();
@@ -62,4 +67,10 @@ export const lessonsApi = {
   list: () => request<Lesson[]>("/lessons"),
   clear: () => request<{ deleted: number }>("/lessons", { method: "DELETE" }),
   remove: (id: number) => request<void>(`/lessons/${id}`, { method: "DELETE" }),
+};
+
+export const subjectsApi = {
+  list: () => request<Subject[]>("/subjects"),
+  create: (data: { name: string; color?: SubjectColor }) => post<Subject>("/subjects", data),
+  remove: (id: number) => request<void>(`/subjects/${id}`, { method: "DELETE" }),
 };

@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { z } from "zod";
 import db, { type LessonRow, type SegmentRow } from "../db.js";
 import { summarize } from "../services/summarize.js";
 import { transcribe } from "../services/transcribe.js";
@@ -34,6 +35,7 @@ function serialize(row: LessonRow, withSegments = true) {
     segments: withSegments ? findSegments(row.id).map((s) => ({ seq: s.seq, start: s.start_sec, text: s.text })) : [],
     summary,
     error: row.error,
+    subjectId: row.subject_id,
     // SQLite stores UTC without a zone marker; make it explicit for the browser.
     createdAt: `${row.created_at.replace(" ", "T")}Z`,
   };
@@ -136,9 +138,12 @@ async function summarizeLesson(id: number, run: Run) {
     const summary = await summarize(transcript, run.controller.signal);
     if (!isCurrent()) return;
 
-    db.prepare(
-      "UPDATE lessons SET summary = ?, title = ?, status = 'done', stage = NULL, error = NULL WHERE id = ?"
-    ).run(JSON.stringify(summary), titleFromSummary(summary.topics), id);
+    // The title is left alone: a name the student gave is kept, and an unnamed session is named after
+    // its topics when it is sent out (see serialize), so a continued session gets a fresh name too.
+    db.prepare("UPDATE lessons SET summary = ?, status = 'done', stage = NULL, error = NULL WHERE id = ?").run(
+      JSON.stringify(summary),
+      id
+    );
   } catch (err) {
     if (!isCurrent()) return;
     const message = err instanceof Error ? err.message : String(err);
@@ -149,12 +154,65 @@ async function summarizeLesson(id: number, run: Run) {
   }
 }
 
-// Start a lesson; the browser then sends short audio chunks while recording.
-lessons.post("/", (c) => {
+const subjectExists = (id: number) => !!db.prepare("SELECT 1 FROM subjects WHERE id = ?").get(id);
+
+const createSchema = z.object({
+  subjectId: z.number().int().nullable().optional(),
+  title: z.string().trim().max(80).optional(),
+});
+
+// Start a lesson, optionally filed under a subject and with a name; the browser then sends short audio
+// chunks while recording. Without a name, the session is named after its topics once summarized.
+lessons.post("/", async (c) => {
+  const parsed = createSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) return c.json({ error: "Invalid session details" }, 400);
+  const subjectId = parsed.data.subjectId ?? null;
+  if (subjectId !== null && !subjectExists(subjectId)) return c.json({ error: "Subject not found" }, 404);
+
   const { lastInsertRowid } = db
-    .prepare("INSERT INTO lessons (title, status) VALUES ('Untitled lecture', 'recording')")
-    .run();
+    .prepare("INSERT INTO lessons (title, status, subject_id) VALUES (?, 'recording', ?)")
+    .run(parsed.data.title || DEFAULT_TITLE, subjectId);
   return c.json({ id: Number(lastInsertRowid) }, 201);
+});
+
+// Continue a finished session: the new recording is added after its transcript, and the summary is
+// written again from the whole thing when it stops.
+lessons.post("/:id/resume", (c) => {
+  const id = Number(c.req.param("id"));
+  const lesson = findLesson(id);
+  if (!lesson) return c.json({ error: "Lesson not found" }, 404);
+  if (lesson.status !== "done") return c.json({ error: "Only a finished session can be continued" }, 409);
+
+  const last = db
+    .prepare("SELECT MAX(seq) AS seq, MAX(start_sec) AS start FROM segments WHERE lesson_id = ?")
+    .get(id) as unknown as { seq: number | null; start: number | null };
+  const seqOffset = (last.seq ?? -1) + 1;
+  // The last piece started at `start` and lasted up to a few seconds; leave room for it.
+  const startOffset = last.start === null ? 0 : last.start + 5;
+  db.prepare(
+    "UPDATE lessons SET status = 'recording', stage = NULL, error = NULL, seq_offset = ?, start_offset = ? WHERE id = ?"
+  ).run(seqOffset, startOffset, id);
+  return c.json({ id });
+});
+
+const updateSchema = z.object({
+  subjectId: z.number().int().nullable().optional(),
+  title: z.string().trim().max(80).optional(),
+});
+
+// Rename a session or move it to another subject (null = unsorted).
+lessons.patch("/:id", async (c) => {
+  const id = Number(c.req.param("id"));
+  if (!findLesson(id)) return c.json({ error: "Lesson not found" }, 404);
+  const parsed = updateSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) return c.json({ error: "Invalid session details" }, 400);
+  const { subjectId, title } = parsed.data;
+  if (subjectId !== undefined) {
+    if (subjectId !== null && !subjectExists(subjectId)) return c.json({ error: "Subject not found" }, 404);
+    db.prepare("UPDATE lessons SET subject_id = ? WHERE id = ?").run(subjectId, id);
+  }
+  if (title !== undefined) db.prepare("UPDATE lessons SET title = ? WHERE id = ?").run(title || DEFAULT_TITLE, id);
+  return c.json(serialize(findLesson(id)!, false));
 });
 
 lessons.post("/:id/chunks", async (c) => {
@@ -165,20 +223,23 @@ lessons.post("/:id/chunks", async (c) => {
 
   const form = await c.req.parseBody();
   const audio = form["audio"];
-  const seq = Number(form["seq"]);
-  const start = Number(form["start"]);
-  if (!(audio instanceof File) || audio.size === 0 || !Number.isInteger(seq) || !Number.isFinite(start)) {
+  const rawSeq = Number(form["seq"]);
+  const rawStart = Number(form["start"]);
+  if (!(audio instanceof File) || audio.size === 0 || !Number.isInteger(rawSeq) || !Number.isFinite(rawStart)) {
     return c.json({ error: "Send multipart fields 'audio', 'seq' and 'start'" }, 400);
   }
 
   const isFinal = form["final"] !== "0";
+  // A continued session numbers its new pieces after the ones it already has.
+  const seq = rawSeq + lesson.seq_offset;
+  const start = Math.max(0, Math.floor(rawStart)) + lesson.start_offset;
   const key = `${id}:${seq}`;
   const version = (latestRequest.get(key) ?? 0) + 1;
   latestRequest.set(key, version);
 
   const buffer = Buffer.from(await audio.arrayBuffer());
-  const result = await enqueue(() => transcribeChunk(id, seq, Math.max(0, Math.floor(start)), buffer, isFinal, version));
-  return c.json({ seq, start: Math.max(0, Math.floor(start)), final: isFinal, ...result });
+  const result = await enqueue(() => transcribeChunk(id, seq, start, buffer, isFinal, version));
+  return c.json({ seq, start, final: isFinal, ...result });
 });
 
 // Queued after the pending chunks, so it always sees the full transcript.
@@ -210,8 +271,11 @@ lessons.post("/:id/resummarize", (c) => {
 });
 
 lessons.get("/", (c) => {
-  // Failed sessions are never listed; one stays reachable by id just long enough to show its error.
-  const rows = db.prepare("SELECT * FROM lessons WHERE status != 'error' ORDER BY id DESC").all() as unknown as LessonRow[];
+  // Failed new sessions are never listed; one stays reachable by id just long enough to show its error.
+  // A continued session whose new summary failed is still listed: it has its earlier summary to fall back on.
+  const rows = db
+    .prepare("SELECT * FROM lessons WHERE status != 'error' OR summary IS NOT NULL ORDER BY created_at DESC, id DESC")
+    .all() as unknown as LessonRow[];
   return c.json(rows.map((row) => serialize(row, false)));
 });
 
