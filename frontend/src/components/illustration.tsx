@@ -8,7 +8,7 @@ const ART = {
   recording: { src: "/illustrations/recording.webp", width: 900, height: 707 },
   "listening-class": { src: "/illustrations/listening-class.webp", width: 900, height: 792 },
   private: { src: "/illustrations/private.webp", width: 834, height: 802 },
-  checklist: { src: "/illustrations/checklist.webp", width: 896, height: 895 },
+  checklist: { src: "/illustrations/checklist.webp", width: 895, height: 895 },
   listening: { src: "/illustrations/listening.webp", width: 848, height: 640 },
 } as const;
 

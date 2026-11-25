@@ -136,6 +136,11 @@ The user wants the site to feel friendly and student-made, not like a dev tool, 
 - **Copy stays short**: one-sentence bodies, a single short lede in the hero. Sections breathe (`py-28 sm:py-36`,
   `gap-28` between feature rows).
 
+- **Listening ribbon** (`components/landing/listening-ribbon.tsx`): across the bottom of the hero, a lecture transcript
+  flows left to right along a gentle wave (SVG `textPath`, `startOffset` moved each frame, looping seamlessly; static
+  with reduced motion), coming out of a pink mic sticker and fading at both edges. Key phrases are `fill-foreground
+  font-semibold`, the rest `fill-muted-foreground`. It is the "just listen, and the text appears" moment.
+
 Landing order: hero (text left; the `listening-class` drawing, made for the tagline: eyes closed listening, notes crossed out,
 laptop on REC, with three stickers in its open space) → demo band ("A
 lecture, turned into notes") → three alternating feature rows (checklist, notebook, private) → centred closing CTA ringed by floating stickers →

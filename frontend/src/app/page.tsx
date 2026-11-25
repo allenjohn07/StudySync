@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { Illustration, type IllustrationName } from "@/components/illustration";
 import { FitText } from "@/components/landing/fit-text";
+import { ListeningRibbon } from "@/components/landing/listening-ribbon";
 import { LiveDemoWindow } from "@/components/landing/live-demo";
 import { SiteHeader } from "@/components/site-header";
 import { Sticker, type StickerColor, type StickerName } from "@/components/sticker";
@@ -39,6 +40,7 @@ function LandingPage() {
         <section className={cn(HERO_SCREEN, "flex flex-col")}>
           <Nav />
           <Hero />
+          <ListeningRibbon className="mb-4 shrink-0 sm:mb-8" />
         </section>
         <WindowBand />
         <Features />
@@ -71,7 +73,7 @@ function Nav() {
 
 function Hero() {
   return (
-    <div className="grid flex-1 items-center gap-12 px-6 py-14 sm:px-14 lg:grid-cols-[1.1fr_1fr] lg:gap-8">
+    <div className="grid flex-1 items-center gap-12 px-6 pt-10 pb-2 sm:px-14 lg:grid-cols-[1.1fr_1fr] lg:gap-8">
       <div className="flex flex-col items-start gap-7">
         <span className="inline-flex h-7 items-center gap-2 rounded-full border border-border bg-card px-3 text-[13px] text-muted-foreground shadow-xs dark:bg-white/[0.03]">
           <span className="size-1.5 rounded-full bg-emerald-500" />
@@ -139,7 +141,7 @@ function Hero() {
           sizes="(min-width: 1024px) 540px, 80vw"
         />
         <Sticker name="headphones" color="blue" rotate={-10} size={50} float className="absolute top-[6%] left-[10%]" />
-        <Sticker name="mic" color="pink" rotate={10} size={48} float delay={900} className="absolute top-[10%] right-[8%]" />
+        <Sticker name="bulb" color="green" rotate={10} size={46} float delay={900} className="absolute top-[10%] right-[8%]" />
         <Sticker name="sparkle" color="yellow" rotate={8} size={34} float delay={1800} className="absolute top-[46%] left-[2%]" />
       </div>
     </div>
