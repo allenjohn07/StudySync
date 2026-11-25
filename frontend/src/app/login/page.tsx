@@ -62,8 +62,8 @@ export default function LoginPage() {
           <div className="dot-grid relative hidden overflow-hidden border-l border-border bg-muted/40 lg:flex lg:flex-col lg:justify-end dark:bg-black/20">
             <div className="relative flex flex-1 items-center justify-center px-14 pt-14">
               <div className="relative w-full max-w-[360px]">
-                <Illustration name="listening" alt="A student relaxing with headphones on" eager sizes="360px" />
-                <Sticker name="headphones" color="blue" rotate={-12} size={48} float className="absolute -bottom-2 left-[-6%]" />
+                <Illustration name="checklist" alt="A student ticking off a checklist on a tablet" eager sizes="360px" />
+                <Sticker name="check" color="green" rotate={-12} size={48} float className="absolute -bottom-2 left-[-6%]" />
                 <Sticker name="sparkle" color="yellow" rotate={10} size={36} float delay={1200} className="absolute top-0 right-[6%]" />
               </div>
             </div>

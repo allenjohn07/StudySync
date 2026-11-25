@@ -130,22 +130,17 @@ function Hero() {
         </div>
       </div>
 
-      {/* The student and her notebook, with stickers stuck around her */}
-      <div className="relative mx-auto w-full max-w-[520px] max-lg:max-w-[400px]">
-        <div
-          aria-hidden="true"
-          className="absolute inset-[10%_8%_14%_14%] rounded-full bg-highlight/25 blur-3xl dark:bg-highlight/10"
-        />
+      {/* The tagline as a picture: pen and notebook put down, headphones on. Stickers stuck around. */}
+      <div className="relative mx-auto w-full max-w-[560px] max-lg:max-w-[420px]">
         <Illustration
-          name="notebook"
-          alt="A student sketching the Calvin cycle in a notebook"
+          name="listening"
+          alt="A student lying back with headphones on, notebook and pen put down"
           eager
-          className="relative"
+          sizes="(min-width: 1024px) 560px, 80vw"
         />
-        <Sticker name="mic" color="pink" rotate={-12} size={52} float className="absolute top-[2%] left-[4%]" />
-        <Sticker name="sparkle" color="yellow" rotate={10} size={40} float delay={900} className="absolute top-[-4%] right-[14%]" />
-        <Sticker name="pencil" color="blue" rotate={-8} size={50} float delay={1800} className="absolute right-[-2%] bottom-[26%]" />
-        <Sticker name="bulb" color="green" rotate={12} size={46} float delay={2600} className="absolute bottom-[4%] left-[-2%]" />
+        <Sticker name="headphones" color="blue" rotate={-12} size={52} float className="absolute top-[-6%] left-[2%]" />
+        <Sticker name="sparkle" color="yellow" rotate={10} size={40} float delay={900} className="absolute top-[-2%] right-[10%]" />
+        <Sticker name="mic" color="pink" rotate={8} size={48} float delay={1800} className="absolute right-[0%] bottom-[-6%]" />
       </div>
     </div>
   );
@@ -165,7 +160,6 @@ function WindowBand() {
         <p className="text-muted-foreground">Watch one go by. It takes about ten seconds.</p>
       </div>
       <div className="relative w-full max-w-[1180px]">
-        <Sticker name="calendar" color="peach" rotate={-14} size={56} float className="absolute -top-7 -left-5 z-10 max-sm:hidden" />
         <Sticker name="check" color="green" rotate={12} size={52} float delay={1500} className="absolute -right-5 -bottom-6 z-10 max-sm:hidden" />
         <LiveDemoWindow />
       </div>
@@ -178,37 +172,33 @@ const FEATURES: {
   alt: string;
   sticker: StickerName;
   color: StickerColor;
-  blob: string;
   label: string;
   title: string;
   body: string;
 }[] = [
   {
-    art: "listening",
-    alt: "A student relaxing with headphones on, notebook closed",
-    sticker: "headphones",
-    color: "blue",
-    blob: "bg-sky-300/30 dark:bg-sky-400/10",
-    label: "Record",
-    title: "Just listen",
-    body: "Hit record and stay in the moment. Every word is written down for you, with timestamps.",
-  },
-  {
     art: "checklist",
     alt: "A student ticking off a checklist on a tablet",
     sticker: "check",
     color: "green",
-    blob: "bg-emerald-300/30 dark:bg-emerald-400/10",
     label: "Summarize",
     title: "Notes that sort themselves",
     body: "Topics, key points, due dates and to-dos, pulled out the moment class ends.",
+  },
+  {
+    art: "notebook",
+    alt: "A student sketching the Calvin cycle in a notebook",
+    sticker: "bulb",
+    color: "yellow",
+    label: "Study",
+    title: "A study tip with every class",
+    body: "Each summary ends with one small, concrete way to review what you just heard.",
   },
   {
     art: "private",
     alt: "A student writing next to a laptop, behind a big padlock shield",
     sticker: "lock",
     color: "purple",
-    blob: "bg-violet-300/30 dark:bg-violet-400/10",
     label: "Private",
     title: "Stays on your laptop",
     body: "Transcription and summaries run on your own machine. Your recordings never leave it.",
@@ -227,9 +217,8 @@ function Features() {
               i % 2 === 1 && "md:[&>*:first-child]:order-2",
             )}
           >
-            <div className="relative mx-auto w-full max-w-[420px]">
-              <div aria-hidden="true" className={cn("absolute inset-[12%] rounded-full blur-3xl", f.blob)} />
-              <Illustration name={f.art} alt={f.alt} className="relative" />
+            <div className="mx-auto w-full max-w-[420px]">
+              <Illustration name={f.art} alt={f.alt} />
             </div>
             <div className="flex flex-col items-start gap-4">
               <div className="flex items-center gap-3">

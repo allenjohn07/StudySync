@@ -127,8 +127,7 @@ The user wants the site to feel friendly and student-made, not like a dev tool, 
   art of students (notebook, listening, checklist, private). They are stored as **black ink on a transparent
   background** and get `dark:invert`, so they sit on any surface in both themes. To add one, convert the paper
   background to alpha the same way (alpha = darkness relative to the paper colour; trim the margins; save as WebP
-  ~900px). Put a soft blurred pastel blob behind (`absolute inset-[12%] rounded-full blur-3xl bg-<hue>-300/30
-  dark:bg-<hue>-400/10`). Use one per section at most.
+  ~900px). **No glow/blob behind them** (the user removed it); the drawing sits straight on the surface. Use one per section at most.
 - **Stickers** (`components/sticker.tsx`): tilted line icons with a thick pastel backing (green, yellow, purple,
   peach, blue, pink) and a dark `#24262b` line, which stays dark in dark mode on purpose. `float` makes them bob
   gently (off with reduced motion), and they pop on hover. Scatter 2–4 around an illustration or a section's edges
@@ -137,6 +136,6 @@ The user wants the site to feel friendly and student-made, not like a dev tool, 
 - **Copy stays short**: one-sentence bodies, a single short lede in the hero. Sections breathe (`py-28 sm:py-36`,
   `gap-28` between feature rows).
 
-Landing order: hero (text left, notebook illustration with stickers right) → demo band ("A lecture, turned into
-notes") → three alternating feature rows with illustrations → centred closing CTA ringed by floating stickers →
-slim footer (brand, three links, the `StudySync` watermark). The login panel shows the listening illustration.
+Landing order: hero (text left; the listening drawing, which pictures the tagline, with stickers right) → demo band ("A
+lecture, turned into notes") → three alternating feature rows (checklist, notebook, private) → centred closing CTA ringed by floating stickers →
+slim footer (brand, three links, the `StudySync` watermark). The login panel shows the checklist illustration.
