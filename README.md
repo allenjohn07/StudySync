@@ -87,6 +87,13 @@ cd frontend && npm run dev        # http://localhost:3000
 Open <http://localhost:3000>, click **Log in**, then **New recording**, pick a subject and allow the
 microphone. Say something, press **Stop**, and wait a few seconds for the summary.
 
+**Due dates in your calendar.** The backend serves a live calendar feed of every assignment at
+<http://localhost:4000/api/calendar.ics>. Subscribe to it once (the calendar icon next to **Upcoming** in the sidebar,
+or *File → New Calendar Subscription* in Apple Calendar) and new due dates appear by themselves, with a reminder the
+day before. Google Calendar can't reach your laptop, so each assignment also has **Add to calendar** (a prefilled
+Google Calendar event or a `.ics` file). Each summary ends with **Learn more** links (Wikipedia, Khan Academy, YouTube)
+for its topics.
+
 To start over with demo data (four subjects and a handful of sessions), run `cd backend && npm run seed`.
 It deletes every subject and session first.
 
@@ -137,6 +144,7 @@ backend/                  Hono API (port 4000)
   src/db.ts               SQLite setup: subjects, lessons and segments tables
   src/routes/lessons.ts   Session routes (create, continue, rename/move) and the job queue
   src/routes/subjects.ts  Subjects (classes) that group sessions
+  src/routes/calendar.ts  Live iCalendar feed of due dates (/api/calendar.ics)
   src/seed.ts             `npm run seed`: wipes the database and adds demo data
   src/services/           transcribe.ts (ffmpeg + whisper.cpp), summarize.ts (Ollama)
   models/                 Whisper model file (git-ignored, you download it)

@@ -112,10 +112,13 @@ export function SummaryStream({
   summary,
   animate = false,
   size = "md",
+  assignmentActions,
 }: {
   summary: SummaryData;
   animate?: boolean;
   size?: keyof typeof SIZES;
+  /** Extra controls under an assignment's due date (the dashboard's "Add to calendar"), by assignment index. */
+  assignmentActions?: (index: number) => React.ReactNode;
 }) {
   const [doneTasks, setDoneTasks] = useState<Set<number>>(new Set());
   const items = buildItems(summary);
@@ -225,6 +228,11 @@ export function SummaryStream({
                         >
                           {due.words.join(" ")}
                         </Badge>
+                      )}
+                      {assignmentActions && (
+                        <span className={enter(due).className} style={enter(due).style}>
+                          {assignmentActions(a.index)}
+                        </span>
                       )}
                     </div>
                   );

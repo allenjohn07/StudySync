@@ -10,6 +10,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { CalendarSubscribe } from "@/components/calendar-actions";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
 import {
@@ -21,6 +22,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ShimmeringText } from "@/components/ui/shimmering-text";
+import { upcomingDue } from "@/lib/calendar";
 import { groupBySubject, subjectDot } from "@/lib/subjects";
 import type { Lesson, Subject } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -162,6 +164,8 @@ export function AppSidebar({
       </div>
 
       <nav aria-label="Sessions" className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-3 pb-3">
+        {!needle && <Upcoming sessions={sessions} subjects={subjects} locked={locked} onSelect={onSelect} />}
+
         <h2 className="label-mono px-2.5 pt-2 pb-1.5">Subjects</h2>
 
         {sessions.length === 0 && subjects.length === 0 && (
@@ -351,5 +355,61 @@ export function AppSidebar({
         )}
       </div>
     </aside>
+  );
+}
+
+/** The next few due dates across every session; click one to open the session it came from. */
+function Upcoming({
+  sessions,
+  subjects,
+  locked,
+  onSelect,
+}: {
+  sessions: Lesson[];
+  subjects: Subject[];
+  locked: boolean;
+  onSelect: (id: number) => void;
+}) {
+  const items = upcomingDue(sessions, subjects).slice(0, 4);
+  if (!items.length) return null;
+  return (
+    <div className="mb-3 flex flex-col">
+      <div className="flex items-center justify-between pr-1">
+        <h2 className="label-mono px-2.5 pt-2 pb-1.5">Upcoming</h2>
+        <CalendarSubscribe />
+      </div>
+      <ul className="flex flex-col gap-px">
+        {items.map((item) => {
+          const date = new Date(`${item.dueDate}T00:00:00`);
+          return (
+            <li key={`${item.sessionId}-${item.title}`}>
+              <button
+                type="button"
+                disabled={locked}
+                onClick={() => onSelect(item.sessionId)}
+                className="flex w-full items-center gap-3 rounded-lg px-2.5 py-1.5 text-left transition-colors outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50"
+              >
+                {/* a tiny tear-off calendar page */}
+                <span className="flex w-9 shrink-0 flex-col items-center overflow-hidden rounded-md border border-sidebar-border bg-card text-center shadow-xs dark:bg-white/[0.03]">
+                  <span className="w-full bg-destructive/90 text-[8px] leading-3 font-semibold tracking-wider text-white uppercase">
+                    {date.toLocaleDateString("en-US", { month: "short" })}
+                  </span>
+                  <span className="text-[13px] leading-5 font-semibold tabular-nums">{date.getDate()}</span>
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] leading-5 font-medium">{item.title}</span>
+                  <span className="flex items-center gap-1.5 text-[11px] leading-4 text-muted-foreground">
+                    <span className={cn("size-1.5 shrink-0 rounded-full", subjectDot(item.subject))} />
+                    <span className="truncate">
+                      {date.toLocaleDateString("en-US", { weekday: "long" })} · {item.subject?.name ?? "Unsorted"}
+                    </span>
+                  </span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
