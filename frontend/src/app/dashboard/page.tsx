@@ -198,10 +198,14 @@ export default function DashboardPage() {
   const busy = processing || createLesson.isPending || resumeLesson.isPending;
 
   function openDialog(mode: RecordingTarget["mode"], sessionId: number | null = null) {
+    setPaletteOpen(false);
     setDialog({ open: true, mode, sessionId });
   }
 
   async function handleStart(target: RecordingTarget) {
+    // nothing should be left floating over the page once recording starts (the search palette can be opened
+    // on top of the new-recording dialog, or be open when Ctrl Ctrl starts one)
+    setPaletteOpen(false);
     setDialog((d) => ({ ...d, open: false }));
     discardIfFailed();
     setRequestError(null);
