@@ -138,9 +138,9 @@ function Hero() {
           eager
           sizes="(min-width: 1024px) 560px, 80vw"
         />
-        <Sticker name="headphones" color="blue" rotate={-12} size={52} float className="absolute top-[-6%] left-[2%]" />
-        <Sticker name="sparkle" color="yellow" rotate={10} size={40} float delay={900} className="absolute top-[-2%] right-[10%]" />
-        <Sticker name="mic" color="pink" rotate={8} size={48} float delay={1800} className="absolute right-[0%] bottom-[-6%]" />
+        <Sticker name="sparkle" color="yellow" rotate={10} size={34} float delay={900} className="absolute top-[-2%] left-[38%]" />
+        <Sticker name="headphones" color="blue" rotate={10} size={52} float className="absolute top-[2%] right-[4%]" />
+        <Sticker name="mic" color="pink" rotate={-8} size={46} float delay={1800} className="absolute right-[18%] bottom-[-2%]" />
       </div>
     </div>
   );
