@@ -21,7 +21,7 @@ and TanStack Query. The backend is in `../backend`; the root `README.md` has the
   isn't a native `<button>`, also pass `nativeButton={false}` on `Button`. `TooltipProvider` takes `delay`.
   Check the generated source in `components/ui/` before wiring up a new component. Add components with
   `npx shadcn@latest add <name>`, then restyle them to the design system.
-- **Design system**: the guide is `.claude/skills/studysync-design/SKILL.md` (neutral greys in OKLCH, Inter, hairline
+- **Design system**: the guide is `.claude/skills/studysync-design/SKILL.md` (neutral greys in OKLCH, Geist, hairline
   borders, yellow used sparingly, light and dark mode via `next-themes`). Tokens live in `src/app/globals.css`
   (`:root` and `.dark`; Tailwind v4: no `tailwind.config`).
 - **Page frame**: the landing and login pages are a rounded full-window card on the page margin (`p-3 sm:p-4`), and

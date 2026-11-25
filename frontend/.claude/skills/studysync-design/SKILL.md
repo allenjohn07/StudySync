@@ -1,12 +1,12 @@
 ---
 name: studysync-design
-description: StudySync frontend design system — the neutral, Inter-based look (modelled on oklch.fyi, interfaces.dev and jakub.kr) with light and dark mode. Exact tokens, type, borders, motion and component patterns. Load this before building, restyling, or adding any page or component in frontend/ so new UI matches instead of drifting to defaults.
+description: StudySync frontend design system — the neutral, Geist-based look (modelled on oklch.fyi, interfaces.dev and jakub.kr) with light and dark mode. Exact tokens, type, borders, motion and component patterns. Load this before building, restyling, or adding any page or component in frontend/ so new UI matches instead of drifting to defaults.
 ---
 
 # StudySync design system
 
 In November 2026 the user replaced the old cream/ink/yellow "poster" style with a refined, neutral design language
-modelled on **oklch.fyi**, **interfaces.dev** and **jakub.kr**: greys in OKLCH, Inter, hairline borders, soft
+modelled on **oklch.fyi**, **interfaces.dev** and **jakub.kr**: greys in OKLCH, Geist (the Next.js/Vercel font), hairline borders, soft
 shadows, small purposeful motion, and **light + dark mode**. The marker yellow stays as the brand accent, but
 **used sparingly**. The whole site (landing, login, dashboard) follows this. The pre-redesign version is on `main`
 (the redesign started on the `redesign-neutral-ui` branch), if you ever need to compare.
@@ -47,7 +47,8 @@ look right in both themes: rely on tokens; where a translucent tint reads better
 
 ## Type
 
-- **Inter** for everything (`font-sans`; `font-display` also maps to Inter). **Geist Mono** for `font-mono`
+- **Geist** for everything (`font-sans`; `font-display` also maps to Geist). The user picked Geist over Inter for its
+  slightly rounder, Next.js-site feel; don't switch back to Inter. **Geist Mono** for `font-mono`
   (timestamps, timer, `.label-mono`). Loaded in `app/layout.tsx`.
 - Headings are `font-semibold` with negative tracking that grows with size: `tracking-[-0.01em]` at 15px,
   `-0.02em` at 20px, `-0.03em` at 24–28px, `-0.045em/-0.05em` for the hero. **No `font-extrabold`, no condensed
@@ -106,7 +107,7 @@ Small and quick, `ease-out`, 150–300 ms:
   `Ctrl Ctrl` hint on the left, Cancel + "Start recording" (red dot) on the right. The last subject used is
   preselected.
 - **Landing / login**: still the rounded full-window card on a page margin (`p-3 sm:p-4`, `rounded-[22px] border
-  border-border bg-card`), sections sized in `dvh`. Hero: a small status pill above a huge semibold Inter headline
+  border-border bg-card`), sections sized in `dvh`. Hero: a small status pill above a huge semibold Geist headline
   (red strike on "writing.", yellow mark on "listening."), muted lede, two CTAs. The demo band is `bg-muted/40
   .dot-grid`, not yellow. Login's right panel is the same dotted neutral panel.
 - `SiteHeader` (`h-16`) is for landing/login only; the dashboard has its own header.
