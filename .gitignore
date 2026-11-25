@@ -1,0 +1,4 @@
+# Root tooling only; backend/ and frontend/ have their own .gitignore files.
+node_modules
+.DS_Store
+*.log
