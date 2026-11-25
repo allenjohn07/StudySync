@@ -34,7 +34,7 @@ and no accounts or API keys are needed.
   sessions by subject and is searchable.
 - **Continue a session.** Pick up an earlier session; the new recording is added to its transcript and the summary is
   rewritten from the whole thing.
-- **Due dates in your calendar.** A live calendar feed of every assignment, an **Upcoming** list in the sidebar, and
+- **Due dates in your calendar.** Written straight into Apple Calendar and kept up to date, an **Upcoming** list in the sidebar, and
   one-click **Add to calendar** (Google Calendar or a `.ics` file) on each assignment.
 - **Learn more.** Each topic links to Wikipedia, Khan Academy and YouTube.
 - **Search everything** with ⌘L (or ⌘K): sessions, transcripts, topics, subjects, deadlines and actions.
@@ -104,14 +104,18 @@ You can still run a single part on its own, for example `npm run dev:backend` or
 
 ### Calendar
 
-The backend serves every assignment that has a due date as a calendar feed at
-<http://localhost:4000/api/calendar.ics>. Each one becomes an all-day event with a reminder at 9:00 the day before.
+Every assignment with a due date becomes an all-day event with a reminder at 9:00 the day before.
 
-- **Subscribe once** (recommended): click the calendar icon next to **Upcoming** in the sidebar and choose
-  **Subscribe**, or add the URL in Apple Calendar via *File → New Calendar Subscription*. New due dates then appear on
-  their own. Calendars refresh the feed about once an hour while StudySync is running.
-- **One at a time:** every assignment in a summary has **Add to calendar**, which opens a prefilled Google Calendar
-  event or downloads a `.ics` file. Use this for Google Calendar, which cannot subscribe to a feed on your own computer.
+- **Apple Calendar (Mac, recommended):** click the calendar icon next to **Upcoming** in the sidebar and choose **Add to
+  Apple Calendar** (also in every assignment's **Add to calendar** menu and in the ⌘L search). StudySync creates a
+  "StudySync" calendar and writes the due dates straight into it, then keeps it up to date after every class and
+  whenever a session is deleted or moved. The first time, macOS asks whether the app running StudySync (Terminal, VS
+  Code…) may control Calendar; choose **OK**. If you declined, allow it in *System Settings → Privacy & Security →
+  Automation*. The "StudySync" calendar belongs to the app: edits made there are replaced on the next update.
+- **Other calendar apps** (Outlook, Thunderbird): subscribe to the feed at <http://localhost:4000/api/calendar.ics>
+  (copy it from the same popover). It refreshes about once an hour while StudySync is running.
+- **One at a time:** every assignment has **Add to calendar** → a prefilled Google Calendar event or a `.ics` file.
+  Use this for Google Calendar, which cannot subscribe to a feed on your own computer.
 
 ### Demo data
 
@@ -202,6 +206,9 @@ All routes are served under `/api`, except the health check.
 | `POST` | `/api/subjects` | Create a subject. Body: `{ name, color? }`. Returns the existing one if the name is taken |
 | `DELETE` | `/api/subjects/:id` | Delete a subject; its sessions become unsorted |
 | `GET` | `/api/calendar.ics` | iCalendar feed of every assignment with a due date |
+| `GET` | `/api/calendar/apple` | Apple Calendar sync status: `{ supported, enabled, syncing, lastSyncAt, lastError, events }` |
+| `PUT` | `/api/calendar/apple` | Turn Apple Calendar sync on or off. Body: `{ enabled }`. Turning it on writes every due date first |
+| `POST` | `/api/calendar/apple/sync` | Write the due dates into Apple Calendar now |
 
 A session's `status` moves from `recording` to `processing` to `done`, or to `error` if something fails.
 
@@ -219,7 +226,7 @@ A session's `status` moves from `recording` to `processing` to `done`, or to `er
 │   │   ├── app.ts          App, CORS and routes
 │   │   ├── db.ts           SQLite schema and migrations
 │   │   ├── seed.ts         Demo data (`npm run seed`)
-│   │   ├── routes/         lessons.ts, subjects.ts, calendar.ts
+│   │   ├── routes/         lessons.ts, subjects.ts, calendar.ts (feed + Apple Calendar sync)
 │   │   └── services/       transcribe.ts (ffmpeg + whisper.cpp), summarize.ts (Ollama)
 │   └── models/             Whisper model (downloaded by setup, not committed)
 └── frontend/               Next.js app (port 3000)

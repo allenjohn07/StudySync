@@ -11,7 +11,7 @@ import {
   PanelLeft,
   Plus,
   RotateCw,
-  Rss,
+  CalendarPlus,
   Search,
   Sun,
 } from "lucide-react";
@@ -28,7 +28,9 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
-import { CALENDAR_WEBCAL_URL, upcomingDue } from "@/lib/calendar";
+import { useTurnOnAppleCalendar } from "@/components/calendar-actions";
+import { useAppleCalendar } from "@/hooks/use-apple-calendar";
+import { upcomingDue } from "@/lib/calendar";
 import { subjectDot } from "@/lib/subjects";
 import type { Lesson, Subject } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -138,6 +140,8 @@ export function CommandPalette({
   // (e.g. the previous session in the sidebar, which would show a focus ring as if it were still selected).
   const choseRef = useRef(false);
   const { setTheme } = useTheme();
+  const apple = useAppleCalendar().data;
+  const { turnOn: turnOnApple } = useTurnOnAppleCalendar();
   const subjectById = new Map(subjects.map((s) => [s.id, s]));
   const due = upcomingDue(sessions, subjects);
 
@@ -195,12 +199,11 @@ export function CommandPalette({
           <CommandItem value="System theme mode auto" onSelect={run(() => setTheme("system"))}>
             <Monitor /> System theme
           </CommandItem>
-          <CommandItem
-            value="Subscribe calendar due dates feed"
-            onSelect={run(() => window.location.assign(CALENDAR_WEBCAL_URL))}
-          >
-            <Rss /> Add due dates to your calendar
-          </CommandItem>
+          {apple?.supported && !apple.enabled && (
+            <CommandItem value="Add due dates to Apple Calendar sync" onSelect={run(turnOnApple)}>
+              <CalendarPlus /> Add due dates to Apple Calendar
+            </CommandItem>
+          )}
           <CommandItem value="Log out sign out" onSelect={run(onLogout)}>
             <LogOut /> Log out
           </CommandItem>

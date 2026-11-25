@@ -1,13 +1,11 @@
 import { API_URL } from "./api";
 import type { Lesson, Subject } from "./types";
 
-// Getting due dates into a calendar, with no accounts: a live feed served by the backend (subscribe once),
-// a prefilled Google Calendar link, or a one-off .ics file.
+// Getting due dates into a calendar, with no accounts: Apple Calendar sync (backend writes them in directly, see
+// hooks/use-apple-calendar.ts), a live feed for other apps, a prefilled Google Calendar link, or a one-off .ics file.
 
 /** The live feed of every due date (backend/src/routes/calendar.ts). */
 export const CALENDAR_FEED_URL = `${API_URL}/calendar.ics`;
-/** The same feed as a webcal:// link, which opens the system calendar app with "Subscribe" ready. */
-export const CALENDAR_WEBCAL_URL = CALENDAR_FEED_URL.replace(/^https?:/, "webcal:");
 
 export interface DueItem {
   title: string;

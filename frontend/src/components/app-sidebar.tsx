@@ -8,7 +8,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { CalendarSubscribe } from "@/components/calendar-actions";
+import { CalendarSettings } from "@/components/calendar-actions";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -318,7 +318,7 @@ function Upcoming({
     <div className="mb-3 flex flex-col">
       <div className="flex items-center justify-between pr-1">
         <h2 className="label-mono px-2.5 pt-2 pb-1.5">Upcoming</h2>
-        <CalendarSubscribe />
+        <CalendarSettings />
       </div>
       <ul className="flex flex-col gap-px">
         {items.map((item) => {
