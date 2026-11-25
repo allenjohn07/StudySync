@@ -124,7 +124,7 @@ The user wants the site to feel friendly and student-made, not like a dev tool, 
 "more space, less text". Two pieces carry that:
 
 - **Illustrations** (`components/illustration.tsx`, files in `public/illustrations/*.webp`): hand-drawn halftone line
-  art of students (notebook, listening, checklist, private). They are stored as **black ink on a transparent
+  art of students (recording, notebook, listening, checklist, private). They are stored as **black ink on a transparent
   background** and get `dark:invert`, so they sit on any surface in both themes. To add one, convert the paper
   background to alpha the same way (alpha = darkness relative to the paper colour; trim the margins; save as WebP
   ~900px). **No glow/blob behind them** (the user removed it); the drawing sits straight on the surface. Use one per section at most.
@@ -136,6 +136,7 @@ The user wants the site to feel friendly and student-made, not like a dev tool, 
 - **Copy stays short**: one-sentence bodies, a single short lede in the hero. Sections breathe (`py-28 sm:py-36`,
   `gap-28` between feature rows).
 
-Landing order: hero (text left; the listening drawing, which pictures the tagline, with stickers right) → demo band ("A
+Landing order: hero (text left; the `recording` drawing, made for the tagline: headphones on, notes crossed out, laptop on REC,
+with three stickers in its open space) → demo band ("A
 lecture, turned into notes") → three alternating feature rows (checklist, notebook, private) → centred closing CTA ringed by floating stickers →
 slim footer (brand, three links, the `StudySync` watermark). The login panel shows the checklist illustration.

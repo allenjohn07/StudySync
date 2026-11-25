@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 // so they sit on any surface. In dark mode they are inverted to white ink.
 const ART = {
   notebook: { src: "/illustrations/notebook.webp", width: 884, height: 811 },
+  recording: { src: "/illustrations/recording.webp", width: 900, height: 707 },
   private: { src: "/illustrations/private.webp", width: 834, height: 802 },
   checklist: { src: "/illustrations/checklist.webp", width: 896, height: 895 },
   listening: { src: "/illustrations/listening.webp", width: 848, height: 640 },
