@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, Check, ChevronRight, LogOut, PanelLeft, Plus, RotateCw } from "lucide-react";
 import { AppSidebar, SessionTitle, whenLabel } from "@/components/app-sidebar";
 import { BrandMark } from "@/components/brand-mark";
+import { AddToCalendar } from "@/components/calendar-actions";
 import { NewSessionDialog, type RecordingTarget } from "@/components/new-session-dialog";
 import { ScrollFade } from "@/components/scroll-fade";
 import { SummaryStream } from "@/components/summary-stream";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { TopicResources } from "@/components/topic-resources";
 import { Words, splitWords } from "@/components/words";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -542,7 +544,29 @@ export default function DashboardPage() {
             )}
 
             {summary && !summaryEmpty && lesson && !processing && (
-              <SummaryStream key={`${lesson.id}-${retries}`} summary={summary} animate={lesson.id === streamingId} size="lg" />
+              <>
+                <SummaryStream
+                  key={`${lesson.id}-${retries}`}
+                  summary={summary}
+                  animate={lesson.id === streamingId}
+                  size="lg"
+                  assignmentActions={(index) => {
+                    const a = summary.assignments[index];
+                    if (!a?.dueDate || !/^\d{4}-\d{2}-\d{2}$/.test(a.dueDate)) return null;
+                    return (
+                      <AddToCalendar
+                        index={index}
+                        item={{ title: a.title, dueDate: a.dueDate, sessionId: lesson.id, sessionTitle: lesson.title, subject: subject ?? null }}
+                      />
+                    );
+                  }}
+                />
+                <TopicResources
+                  key={`resources-${lesson.id}`}
+                  topics={summary.topics}
+                  className={cn("mt-8", lesson.id === streamingId && "animate-in fade-in-0 fill-mode-both delay-1000 duration-700")}
+                />
+              </>
             )}
           </section>
         </main>

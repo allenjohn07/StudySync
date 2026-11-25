@@ -1,6 +1,6 @@
 import type { ChunkResult, Lesson, Subject, SubjectColor, User } from "./types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
 
 export class ApiError extends Error {
   status: number;

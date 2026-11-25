@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import calendar from "./routes/calendar.js";
 import lessons from "./routes/lessons.js";
 import subjects from "./routes/subjects.js";
 
@@ -14,5 +15,6 @@ app.get("/health", (c) => c.json({ status: "ok" }));
 
 app.route("/api/lessons", lessons);
 app.route("/api/subjects", subjects);
+app.route("/api", calendar);
 
 export default app; 

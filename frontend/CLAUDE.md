@@ -11,6 +11,9 @@ and TanStack Query. The backend is in `../backend`; the root `README.md` has the
 - `/dashboard` is the app: an oklch.fyi-style shell (full-width header, collapsible `AppSidebar` with sessions grouped by
   subject) around the live recording, transcript and summary. `NewSessionDialog` runs before every recording: pick or
   create a subject, or continue an earlier session. `/dashboard/demo` only redirects here.
+  Due dates: the sidebar's **Upcoming** list and **Add to calendar** per assignment (`lib/calendar.ts`,
+  `components/calendar-actions.tsx`; the backend serves the live feed). **Learn more** links per topic are plain search
+  URLs built in the browser (`lib/resources.ts`, `components/topic-resources.tsx`), so nothing is sent until clicked.
 
 ## Conventions
 
