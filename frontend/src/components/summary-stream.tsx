@@ -28,29 +28,49 @@ interface Item {
   words: string[];
   index: number;
   delays: number[]; // when each word starts to appear (ms from the start of the reveal)
+  /** Already on screen before (a continued session): shown as is, not written in again. */
+  known: boolean;
+}
+
+/** Identifies an item across two versions of a summary (an assignment and its due date go together). */
+function itemKeys(s: SummaryData) {
+  const keys = new Set<string>();
+  s.topics.forEach((t) => keys.add(`topic:${t}`));
+  s.keyPoints.forEach((t) => keys.add(`point:${t}`));
+  s.assignments.forEach((a) => {
+    keys.add(`assignment:${a.title}|${a.dueDate}`);
+    keys.add(`due:${a.title}|${a.dueDate}`);
+  });
+  s.tasks.forEach((t) => keys.add(`task:${t}`));
+  if (s.studyTip.trim()) keys.add(`tip:${s.studyTip}`);
+  return keys;
 }
 
 // Milliseconds each character holds the next word back (slightly quicker than the titles, since a summary is long).
 const SUMMARY_SPEED = 18;
 const RISE_MS = 1000; // matches the writing effect's default
 
-/** Flattens the summary into the order it appears in. Everything else derives from this list. */
-function buildItems(s: SummaryData): Item[] {
-  const raw: { kind: Kind; text: string; index: number }[] = [];
-  s.topics.forEach((text, index) => raw.push({ kind: "topic", text, index }));
+/**
+ * Flattens the summary into the order it appears in. Everything else derives from this list. With `known` (the
+ * summary as it was before a session was continued), items that were already there are marked as known.
+ */
+function buildItems(s: SummaryData, known?: SummaryData): Item[] {
+  const raw: { kind: Kind; text: string; index: number; key: string }[] = [];
+  s.topics.forEach((text, index) => raw.push({ kind: "topic", text, index, key: `topic:${text}` }));
   s.keyPoints.forEach((text, index) =>
-    raw.push({ kind: "point", text, index }),
+    raw.push({ kind: "point", text, index, key: `point:${text}` }),
   );
   s.assignments.forEach((a, index) => {
-    raw.push({ kind: "assignment", text: a.title, index });
-    raw.push({ kind: "due", text: a.dueLabel ?? formatDue(a.dueDate), index });
+    raw.push({ kind: "assignment", text: a.title, index, key: `assignment:${a.title}|${a.dueDate}` });
+    raw.push({ kind: "due", text: a.dueLabel ?? formatDue(a.dueDate), index, key: `due:${a.title}|${a.dueDate}` });
   });
-  s.tasks.forEach((text, index) => raw.push({ kind: "task", text, index }));
-  if (s.studyTip.trim()) raw.push({ kind: "tip", text: s.studyTip, index: 0 });
+  s.tasks.forEach((text, index) => raw.push({ kind: "task", text, index, key: `task:${text}` }));
+  if (s.studyTip.trim()) raw.push({ kind: "tip", text: s.studyTip, index: 0, key: `tip:${s.studyTip}` });
 
-  const split = raw.map((r) => ({ ...r, words: splitWords(r.text) }));
-  // One continuous rhythm across the whole summary; each item ends with a short pause before the next.
-  const flat = split.flatMap((r) =>
+  const knownKeys = known ? itemKeys(known) : new Set<string>();
+  const split = raw.map((r) => ({ ...r, words: splitWords(r.text), known: knownKeys.has(r.key) }));
+  // One continuous rhythm across the new items; each item ends with a short pause before the next.
+  const flat = split.filter((r) => !r.known).flatMap((r) =>
     r.words.map((w, i) =>
       i === r.words.length - 1 && !/[.!?,;:]$/.test(w) ? `${w},` : w,
     ),
@@ -58,9 +78,10 @@ function buildItems(s: SummaryData): Item[] {
   const all = writingDelays(flat, SUMMARY_SPEED);
   let at = 0;
   return split.map((r) => {
+    if (r.known) return { kind: r.kind, words: r.words, index: r.index, delays: r.words.map(() => 0), known: true };
     const delays = all.slice(at, at + r.words.length);
     at += r.words.length;
-    return { kind: r.kind, words: r.words, index: r.index, delays };
+    return { kind: r.kind, words: r.words, index: r.index, delays, known: false };
   });
 }
 
@@ -113,15 +134,18 @@ export function SummaryStream({
   animate = false,
   size = "md",
   assignmentActions,
+  known,
 }: {
   summary: SummaryData;
+  /** The summary before a session was continued: only what's new is written in. */
+  known?: SummaryData;
   animate?: boolean;
   size?: keyof typeof SIZES;
   /** Extra controls under an assignment's due date (the dashboard's "Add to calendar"), by assignment index. */
   assignmentActions?: (index: number) => React.ReactNode;
 }) {
   const [doneTasks, setDoneTasks] = useState<Set<number>>(new Set());
-  const items = buildItems(summary);
+  const items = buildItems(summary, animate ? known : undefined);
   const s = SIZES[size];
 
   const ofKind = (kind: Kind) => items.filter((i) => i.kind === kind);
@@ -134,17 +158,20 @@ export function SummaryStream({
     items.find((i) => i.kind === "due" && i.index === index);
 
   /** Class and delay that make an element fade in when `item` begins to appear. */
-  const enter = (item: Item | undefined) => ({
-    className: animate ? "writing-text-word" : undefined,
-    style: animate && item ? delayStyle(item.delays[0] ?? 0) : undefined,
-  });
+  const enter = (item: Item | undefined) => {
+    const on = animate && !!item && !item.known;
+    return {
+      className: on ? "writing-text-word" : undefined,
+      style: on ? delayStyle(item.delays[0] ?? 0) : undefined,
+    };
+  };
 
   // The words of one item, each with its own delay.
   const text = (item: Item) =>
     item.words.map((word, i) => (
       <span key={i}>
         {i > 0 && " "}
-        {animate ? (
+        {animate && !item.known ? (
           <WritingWord delay={item.delays[i]}>{word}</WritingWord>
         ) : (
           <span className="inline-block">{word}</span>
