@@ -136,10 +136,13 @@ The user wants the site to feel friendly and student-made, not like a dev tool, 
 - **Copy stays short**: one-sentence bodies, a single short lede in the hero. Sections breathe (`py-28 sm:py-36`,
   `gap-28` between feature rows).
 
-- **Listening ribbon** (`components/landing/listening-ribbon.tsx`): across the bottom of the hero, a lecture transcript
-  flows left to right along a gentle wave (SVG `textPath`, `startOffset` moved each frame, looping seamlessly; static
-  with reduced motion), coming out of a pink mic sticker and fading at both edges. Key phrases are `fill-foreground
-  font-semibold`, the rest `fill-muted-foreground`. It is the "just listen, and the text appears" moment.
+- **Listening streams** (`components/landing/listening-streams.tsx`): two lines of lecture transcript drift in
+  behind the hero (under the copy and buttons) and curve up into the character's ear, so it reads as "he's listening
+  to this". SVG `textPath`s with `startOffset` moved every frame (seamless loop, static with reduced motion). The curve
+  ends are measured from two marker spans placed on the drawing (ear, inside the head). The drawing's light areas are
+  transparent, so a `bg-card` layer masked by a solid silhouette (`listening-class-mask.png`, generated from the ink
+  cut-out by flood-filling the outside) hides the text behind the figure. Key phrases are `fill-foreground
+  font-semibold`; the second stream is smaller and fainter. Desktop only (`max-lg:hidden`).
 
 Landing order: hero (text left; the `listening-class` drawing, made for the tagline: eyes closed listening, notes crossed out,
 laptop on REC, with three stickers in its open space) → demo band ("A
