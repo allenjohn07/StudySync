@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { Illustration, type IllustrationName } from "@/components/illustration";
@@ -72,14 +71,13 @@ function Nav() {
 }
 
 function Hero() {
-  const earRef = useRef<HTMLSpanElement>(null);
-  const headRef = useRef<HTMLSpanElement>(null);
   return (
     <div className="relative grid flex-1 items-center gap-12 overflow-hidden px-6 py-14 sm:px-14 lg:grid-cols-[1.1fr_1fr] lg:gap-8">
-      {/* the lecture drifts in behind everything and into the character's ear */}
-      <ListeningStreams earRef={earRef} headRef={headRef} className="max-lg:hidden" />
+      {/* a faint lecture transcript drifting behind everything */}
+      <ListeningStreams />
 
-      <div className="relative z-10 flex flex-col items-start gap-7">
+      {/* a soft clear patch behind the copy, so the drifting text never competes with it */}
+      <div className="relative z-10 flex flex-col items-start gap-7 before:absolute before:-inset-x-12 before:-inset-y-10 before:-z-10 before:rounded-[48px] before:bg-card before:blur-2xl">
         <span className="inline-flex h-7 items-center gap-2 rounded-full border border-border bg-card px-3 text-[13px] text-muted-foreground shadow-xs dark:bg-white/[0.03]">
           <span className="size-1.5 rounded-full bg-emerald-500" />
           Made for students · runs on your laptop
@@ -145,9 +143,6 @@ function Hero() {
           aria-hidden="true"
           className="absolute inset-0 bg-card [mask-image:url(/illustrations/listening-class-mask.png)] [mask-size:100%_100%]"
         />
-        {/* where the words go in, and where they end up */}
-        <span ref={earRef} aria-hidden="true" className="absolute top-[22%] left-[37.5%]" />
-        <span ref={headRef} aria-hidden="true" className="absolute top-[14%] left-[50%]" />
         <Illustration
           name="listening-class"
           alt="A student at a desk with eyes closed, listening, notes crossed out, a laptop recording the lecture"

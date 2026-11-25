@@ -136,13 +136,13 @@ The user wants the site to feel friendly and student-made, not like a dev tool, 
 - **Copy stays short**: one-sentence bodies, a single short lede in the hero. Sections breathe (`py-28 sm:py-36`,
   `gap-28` between feature rows).
 
-- **Listening streams** (`components/landing/listening-streams.tsx`): two lines of lecture transcript drift in
-  behind the hero (under the copy and buttons) and curve up into the character's ear, so it reads as "he's listening
-  to this". SVG `textPath`s with `startOffset` moved every frame (seamless loop, static with reduced motion). The curve
-  ends are measured from two marker spans placed on the drawing (ear, inside the head). The drawing's light areas are
-  transparent, so a `bg-card` layer masked by a solid silhouette (`listening-class-mask.png`, generated from the ink
-  cut-out by flood-filling the outside) hides the text behind the figure. Key phrases are `fill-foreground
-  font-semibold`; the second stream is smaller and fainter. Desktop only (`max-lg:hidden`).
+- **Hero background streams** (`components/landing/listening-streams.tsx`): four faint lines of lecture transcript drift
+  across the whole hero on slow waves, alternating direction, behind everything (normal words `fill-foreground/[0.07]`,
+  key phrases `/[0.16]` semibold; edges faded). SVG `textPath`s with `startOffset` moved every frame (seamless loop,
+  static with reduced motion). Two things keep it from getting in the way: the copy column has a soft `bg-card` blurred
+  patch behind it (`before:` pseudo-element), and the drawing has a `bg-card` layer masked by its solid silhouette
+  (`listening-class-mask.png`) so text doesn't show through the figure's transparent light areas. The user rejected two
+  earlier versions (a ribbon under the hero; text flowing into the character's ear): keep it as quiet background.
 
 Landing order: hero (text left; the `listening-class` drawing, made for the tagline: eyes closed listening, notes crossed out,
 laptop on REC, with three stickers in its open space) → demo band ("A
