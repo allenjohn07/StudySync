@@ -34,6 +34,7 @@ import {
 import { useLocalAuth } from "@/hooks/use-local-auth";
 import { useSubjects } from "@/hooks/use-subjects";
 import { ApiError } from "@/lib/api";
+import type { LessonSummary } from "@/lib/types";
 import { subjectDot } from "@/lib/subjects";
 import { cn } from "@/lib/utils";
 
@@ -95,6 +96,9 @@ export default function DashboardPage() {
   const [requestError, setRequestError] = useState<string | null>(null);
   // The session whose summary was just written here: it streams in; opening an old session shows it at once.
   const [streamingId, setStreamingId] = useState<number | null>(null);
+  // When a session is continued: its summary as it was, so the old summary stays on screen while the new part
+  // is processed and only what's new writes itself in afterwards.
+  const [knownSummary, setKnownSummary] = useState<LessonSummary | null>(null);
   // Resolves to the lesson's id (or null if it couldn't be created/continued); chunks wait on it.
   const lessonPromiseRef = useRef<Promise<number | null>>(Promise.resolve(null));
 
@@ -202,6 +206,9 @@ export default function DashboardPage() {
     finishLesson.reset();
 
     if (target.mode === "continue") {
+      setKnownSummary(
+        sessions.find((s) => s.id === target.id)?.summary ?? (lesson?.id === target.id ? lesson.summary : null),
+      );
       setLessonId(target.id);
       if (!(await recorder.start())) return;
       const resumed = resumeLesson.mutateAsync(target.id).then(() => target.id);
@@ -213,6 +220,7 @@ export default function DashboardPage() {
       return;
     }
 
+    setKnownSummary(null);
     setLessonId(null);
     if (!(await recorder.start())) return;
     const created = createLesson.mutateAsync({ subjectId: target.subjectId, title: target.title || undefined });
@@ -262,6 +270,7 @@ export default function DashboardPage() {
     setLessonId(id);
     setRequestError(null);
     setStreamingId(null);
+    setKnownSummary(null);
     finishLesson.reset();
     if (!window.matchMedia("(min-width: 1024px)").matches) setSidebarOpen(false);
   }
@@ -509,8 +518,16 @@ export default function DashboardPage() {
             </div>
 
             {processing && (
-              <p role="status" className="text-[15px] font-medium">
-                <ShimmeringText text={lesson?.stage === "summarizing" ? "Summarizing…" : "Thinking…"} />
+              <p role="status" className="mb-6 text-[15px] font-medium">
+                <ShimmeringText
+                  text={
+                    knownSummary
+                      ? "Adding what's new…"
+                      : lesson?.stage === "summarizing"
+                        ? "Summarizing…"
+                        : "Thinking…"
+                  }
+                />
               </p>
             )}
 
@@ -543,12 +560,14 @@ export default function DashboardPage() {
               </p>
             )}
 
-            {summary && !summaryEmpty && lesson && !processing && (
-              <>
+            {/* a continued session keeps its summary on screen while the new part is added */}
+            {summary && !summaryEmpty && lesson && (!processing || knownSummary) && (
+              <div className={cn("transition-opacity duration-300", processing && "opacity-60")}>
                 <SummaryStream
                   key={`${lesson.id}-${retries}`}
                   summary={summary}
                   animate={lesson.id === streamingId}
+                  known={knownSummary ?? undefined}
                   size="lg"
                   assignmentActions={(index) => {
                     const a = summary.assignments[index];
@@ -564,9 +583,12 @@ export default function DashboardPage() {
                 <TopicResources
                   key={`resources-${lesson.id}`}
                   topics={summary.topics}
-                  className={cn("mt-8", lesson.id === streamingId && "animate-in fade-in-0 fill-mode-both delay-1000 duration-700")}
+                  className={cn(
+                    "mt-8",
+                    lesson.id === streamingId && !knownSummary && "animate-in fade-in-0 fill-mode-both delay-1000 duration-700",
+                  )}
                 />
-              </>
+              </div>
             )}
           </section>
         </main>

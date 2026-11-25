@@ -173,7 +173,7 @@ async function summarizeLesson(id: number, run: Run) {
       summary = previous; // nothing new was said: keep the summary as it was
     } else {
       const fresh = await summarize(newPart, run.controller.signal);
-      summary = previous ? mergeSummaries(previous, fresh) : fresh;
+      summary = previous ? mergeSummaries(previous, fresh, newPart) : fresh;
     }
     if (!isCurrent()) return;
 

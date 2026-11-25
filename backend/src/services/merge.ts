@@ -42,15 +42,31 @@ function sameAssignment(a: string, b: string) {
   return na === nb || na.includes(nb) || nb.includes(na) || similar(a, b);
 }
 
-export function mergeSummaries(prev: Summary, next: Summary): Summary {
+// Words that mean an existing deadline changed, rather than a new piece of work being added.
+const CHANGED = /\b(move[sd]?|moving|changed?|instead|postpone[sd]?|push(ed)? (back|to)|extend(ed)?|reschedul\w*|now due|delay(ed)?|bring (it )?forward)\b/i;
+// Words that mean another piece of work, even if it has the same name.
+const ANOTHER = /\b(another|one more|second|new|also|additional|extra)\b/i;
+
+/**
+ * `newTranscript` is the text of the new part, used to tell "the quiz moves to Monday" (update the existing
+ * assignment) from "one more submission on the 31st" (add a second one, even with the same generic name).
+ */
+export function mergeSummaries(prev: Summary, next: Summary, newTranscript = ""): Summary {
   const assignments = prev.assignments.map((a) => ({ ...a }));
+  const changed = CHANGED.test(newTranscript) && !ANOTHER.test(newTranscript);
   for (const item of next.assignments) {
     const existing = assignments.find((a) => sameAssignment(a.title, item.title));
-    if (!existing) assignments.push(item);
-    else if (item.dueDate) {
-      // the speaker gave (or changed) the deadline in the new part
-      existing.dueDate = item.dueDate;
-      existing.dueText = item.dueText ?? existing.dueText ?? null;
+    if (!existing) {
+      assignments.push(item);
+    } else if (item.dueDate && item.dueDate !== existing.dueDate) {
+      if (changed || !existing.dueDate) {
+        // the speaker moved (or first gave) this deadline
+        existing.dueDate = item.dueDate;
+        existing.dueText = item.dueText ?? existing.dueText ?? null;
+      } else {
+        // same name, different date, no sign of a change: a separate piece of work
+        assignments.push(item);
+      }
     }
   }
   return {

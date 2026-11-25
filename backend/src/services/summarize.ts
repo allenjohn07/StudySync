@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { resolveDueDate } from "./dates.js";
+import { addMissedDeadlines } from "./deadlines.js";
 
 export const summarySchema = z.object({
   topics: z.array(z.string()),
@@ -141,7 +142,7 @@ export async function summarize(transcript: string, signal?: AbortSignal): Promi
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const summary = withResolvedDates(summarySchema.parse(await callOllama(transcript, signal)));
+      const summary = addMissedDeadlines(withResolvedDates(summarySchema.parse(await callOllama(transcript, signal))), transcript);
       // A real sentence should always yield something; an all-empty answer is the model giving up, so retry.
       if (wordCount(transcript) >= 3 && !summary.topics.length && !summary.keyPoints.length) {
         throw new Error("The model returned no topics or key points");
