@@ -12,9 +12,9 @@ with a small model through Ollama. No audio or text leaves your computer, and no
 Browser (audio only, cut into ~8 s pieces while you record)
    │  POST /api/lessons/:id/chunks   (one request per piece)
    ▼
-Hono backend ── ffmpeg ──▶ 16 kHz mono wav ──▶ whisper.cpp (small.en) ──▶ transcript lines
-   │                                                                      │ saved in SQLite
-   │  POST /api/lessons/:id/finish                                        ▼
+Hono backend ── ffmpeg ──▶ 16 kHz mono wav ──▶ whisper.cpp (large-v3-turbo) ──▶ transcript lines
+   │                                                                           │ saved in SQLite
+   │  POST /api/lessons/:id/finish                                            ▼
    └──────────────▶ Ollama (llama3.2:3b) ──▶ JSON summary ──▶ SQLite ──▶ shown in the browser
 ```
 
@@ -45,7 +45,7 @@ Hono backend ── ffmpeg ──▶ 16 kHz mono wav ──▶ whisper.cpp (smal
 | Frontend | Next.js 16 (App Router), TypeScript, Tailwind CSS v4, shadcn/ui on Base UI, TanStack Query |
 | Backend | Node.js + Hono + TypeScript (ESM) on port 4000 |
 | Database | SQLite through Node's built-in `node:sqlite` (one file: `backend/studysync.db`) |
-| Speech to text | whisper.cpp with the `ggml-small.en` model, audio converted by ffmpeg |
+| Speech to text | whisper.cpp with the `ggml-large-v3-turbo-q5_0` model, audio converted by ffmpeg |
 | Summary | Ollama running `llama3.2:3b`, answering in a fixed JSON schema (validated with Zod) |
 
 Peak memory is roughly 8 GB including macOS, so it runs comfortably on a 16 GB Mac.
@@ -62,10 +62,10 @@ brew install ffmpeg whisper-cpp ollama
 # 2. Summary model (about 2 GB)
 ollama pull llama3.2:3b
 
-# 3. Speech model (about 470 MB), saved where the backend expects it
+# 3. Speech model (about 574 MB), saved where the backend expects it
 mkdir -p backend/models
-curl -L -o backend/models/ggml-small.en.bin \
-  https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin
+curl -L -o backend/models/ggml-large-v3-turbo-q5_0.bin \
+  https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin
 
 # 4. Install dependencies and create the backend settings file
 cd backend && cp .env.example .env && npm install && cd ..
@@ -97,14 +97,14 @@ To shut down, press `Ctrl+C` in each tab. Your sessions stay in `backend/studysy
 | `FRONTEND_URL` | `http://localhost:3000` | Origin allowed by CORS |
 | `DB_PATH` | `./studysync.db` | SQLite file, relative to the folder you start the backend from |
 | `WHISPER_BIN` | `whisper-cli` | whisper.cpp command |
-| `WHISPER_MODEL_PATH` | `./models/ggml-small.en.bin` | Whisper model file |
+| `WHISPER_MODEL_PATH` | `./models/ggml-large-v3-turbo-q5_0.bin` | Whisper model file |
 | `FFMPEG_BIN` | `ffmpeg` | ffmpeg command |
 | `OLLAMA_URL` | `http://localhost:11434` | Ollama server |
 | `OLLAMA_MODEL` | `llama3.2:3b` | Model used for summaries |
 | `OLLAMA_TIMEOUT_MS` | `90000` | How long to wait for Ollama before the summary is marked as failed |
 
-Quality too low, or too slow? Swap models without touching code: another Whisper model (`tiny.en` is
-faster but less accurate, `medium.en` is more accurate but slower) via `WHISPER_MODEL_PATH`, or a larger Ollama model via `OLLAMA_MODEL` (needs more memory).
+Quality too low, or too slow? Swap models without touching code: another Whisper model (`ggml-tiny.en.bin` or
+`ggml-small.en.bin`, already downloaded in `backend/models/`, are faster but less accurate) via `WHISPER_MODEL_PATH`, or a smaller/larger Ollama model via `OLLAMA_MODEL` (affects memory and speed).
 
 ## API
 
@@ -163,7 +163,7 @@ SELECT lesson_id, seq, start_sec, text FROM segments ORDER BY lesson_id, seq;
 | Symptom | Likely cause |
 | --- | --- |
 | "Could not run ffmpeg" or "Could not run whisper-cli" | The tool isn't installed or not on your `PATH`. Check `ffmpeg -version` and `whisper-cli --help` |
-| Error about the model file | `backend/models/ggml-small.en.bin` is missing: redo the speech model download |
+| Error about the model file | `backend/models/ggml-large-v3-turbo-q5_0.bin` is missing: redo the speech model download |
 | "Ollama returned…" or "fetch failed" | Ollama isn't running: start `ollama serve` |
 | Stuck on "Summarizing…" | Ollama is busy or stalled. After 90 s the summary fails; press **Summarize again** (or **Try again** if it is taking long) |
 | "Couldn't reach the backend" | Backend isn't running on port 4000 |

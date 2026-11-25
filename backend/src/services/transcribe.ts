@@ -27,7 +27,7 @@ export async function transcribe(audio: Buffer): Promise<string> {
     await run(process.env.FFMPEG_BIN ?? "ffmpeg", ["-y", "-i", input, "-ar", "16000", "-ac", "1", wav]);
     await run(process.env.WHISPER_BIN ?? "whisper-cli", [
       "-m",
-      process.env.WHISPER_MODEL_PATH ?? "./models/ggml-small.en.bin",
+      process.env.WHISPER_MODEL_PATH ?? "./models/ggml-large-v3-turbo-q5_0.bin",
       "-f",
       wav,
       "-otxt",
