@@ -130,17 +130,17 @@ function Hero() {
         </div>
       </div>
 
-      {/* The tagline as a picture: notes crossed out, headphones on, the laptop recording. Stickers in the open space. */}
-      <div className="relative mx-auto w-full max-w-[560px] max-lg:max-w-[420px]">
+      {/* The tagline as a picture: eyes closed, listening, notes crossed out, the laptop recording. Stickers in the open space. */}
+      <div className="relative mx-auto w-full max-w-[540px] max-lg:max-w-[400px]">
         <Illustration
-          name="recording"
-          alt="A student at a desk with headphones on and eyes closed, notes crossed out, a laptop recording the lecture"
+          name="listening-class"
+          alt="A student at a desk with eyes closed, listening, notes crossed out, a laptop recording the lecture"
           eager
-          sizes="(min-width: 1024px) 560px, 80vw"
+          sizes="(min-width: 1024px) 540px, 80vw"
         />
-        <Sticker name="sparkle" color="yellow" rotate={-10} size={36} float delay={900} className="absolute top-[4%] left-[14%]" />
-        <Sticker name="mic" color="pink" rotate={10} size={50} float className="absolute top-[8%] right-[8%]" />
-        <Sticker name="pencil" color="blue" rotate={-12} size={46} float delay={1800} className="absolute top-[40%] left-[0%]" />
+        <Sticker name="headphones" color="blue" rotate={-10} size={50} float className="absolute top-[6%] left-[10%]" />
+        <Sticker name="mic" color="pink" rotate={10} size={48} float delay={900} className="absolute top-[10%] right-[8%]" />
+        <Sticker name="sparkle" color="yellow" rotate={8} size={34} float delay={1800} className="absolute top-[46%] left-[2%]" />
       </div>
     </div>
   );

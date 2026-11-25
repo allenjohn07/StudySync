@@ -24,8 +24,9 @@ export default function LoginPage() {
   if (status !== "out") return null;
 
   return (
-    <div className="flex min-h-screen bg-background p-3 sm:p-4">
-      <div className="flex w-full flex-col overflow-hidden rounded-[22px] border border-border bg-card">
+    // The whole page fits one screen: no scrolling, the illustration shrinks with the window height.
+    <div className="flex h-dvh overflow-hidden bg-background p-3 sm:p-4">
+      <div className="flex min-h-0 w-full flex-col overflow-hidden rounded-[22px] border border-border bg-card">
         <SiteHeader>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -38,8 +39,8 @@ export default function LoginPage() {
           </div>
         </SiteHeader>
 
-        <div className="grid flex-1 grid-cols-1 lg:grid-cols-2">
-          <div className="flex flex-col justify-center px-6 py-16 sm:px-14">
+        <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-2">
+          <div className="flex min-h-0 flex-col justify-center px-6 py-10 sm:px-14">
             <div className="w-full max-w-sm">
               <LogoMark className="mb-6 size-10 rounded-xl" />
               <h1 className="text-2xl font-semibold tracking-[-0.03em]">
@@ -60,19 +61,25 @@ export default function LoginPage() {
           </div>
 
           <div className="dot-grid relative hidden overflow-hidden border-l border-border bg-muted/40 lg:flex lg:flex-col lg:justify-end dark:bg-black/20">
-            <div className="relative flex flex-1 items-center justify-center px-14 pt-14">
-              <div className="relative w-full max-w-[360px]">
-                <Illustration name="checklist" alt="A student ticking off a checklist on a tablet" eager sizes="360px" />
-                <Sticker name="check" color="green" rotate={-12} size={48} float className="absolute -bottom-2 left-[-6%]" />
-                <Sticker name="sparkle" color="yellow" rotate={10} size={36} float delay={1200} className="absolute top-0 right-[6%]" />
+            <div className="relative flex min-h-0 flex-1 items-center justify-center px-12 pt-10">
+              {/* sized by the space left over, keeping the drawing's proportions */}
+              <div className="relative aspect-[900/792] h-full max-h-[400px] max-w-full">
+                <Illustration
+                  name="listening-class"
+                  alt="A student at a desk with eyes closed, listening, notes crossed out, a laptop recording the lecture"
+                  eager
+                  sizes="460px"
+                />
+                <Sticker name="headphones" color="blue" rotate={-10} size={44} float className="absolute top-[4%] left-[6%]" />
+                <Sticker name="sparkle" color="yellow" rotate={10} size={32} float delay={1200} className="absolute top-[8%] right-[8%]" />
               </div>
             </div>
-            <div className="relative z-10 flex flex-col gap-6 p-14">
+            <div className="relative z-10 flex shrink-0 flex-col gap-5 px-12 pt-8 pb-12">
               <span className="inline-flex h-7 w-fit items-center gap-2 rounded-full border border-border bg-card px-3 text-[13px] text-muted-foreground shadow-xs dark:bg-white/[0.03]">
                 <span className="size-1.5 rounded-full bg-highlight" />
                 StudySync
               </span>
-              <h2 className="text-5xl leading-[1.02] font-semibold tracking-[-0.05em]">
+              <h2 className="text-[44px] leading-[1.02] font-semibold tracking-[-0.05em]">
                 <WritingText
                   text={"Stop writing.\nStart listening."}
                   speed={40}
