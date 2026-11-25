@@ -142,7 +142,7 @@ function Hero() {
           sizes="(min-width: 1024px) 520px, 80vw"
         />
         <Sticker name="bulb" color="green" rotate={10} size={46} float delay={900} className="absolute top-[10%] right-[8%]" />
-        <Sticker name="sparkle" color="yellow" rotate={8} size={34} float delay={1800} className="absolute top-[-2%] right-[30%]" />
+        <Sticker name="sparkle" color="yellow" rotate={8} size={34} float delay={1800} className="absolute top-[6%] left-[4%]" />
       </div>
     </div>
   );

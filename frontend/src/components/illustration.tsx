@@ -4,12 +4,12 @@ import { cn } from "@/lib/utils";
 // Hand-drawn line illustrations, stored as black ink on a transparent background (public/illustrations),
 // so they sit on any surface. In dark mode they are inverted to white ink.
 const ART = {
-  notebook: { src: "/illustrations/notebook.webp", width: 884, height: 811 },
-  recording: { src: "/illustrations/recording.webp", width: 900, height: 707 },
-  "listening-class": { src: "/illustrations/listening-class.webp", width: 900, height: 792 },
-  private: { src: "/illustrations/private.webp", width: 834, height: 802 },
-  checklist: { src: "/illustrations/checklist.webp", width: 895, height: 895 },
-  listening: { src: "/illustrations/listening.webp", width: 848, height: 640 },
+  notebook: { src: "/illustrations/notebook-v2.webp", width: 884, height: 811 },
+  recording: { src: "/illustrations/recording-v2.webp", width: 900, height: 707 },
+  "listening-class": { src: "/illustrations/listening-class-v2.webp", width: 900, height: 792 },
+  private: { src: "/illustrations/private-v2.webp", width: 834, height: 802 },
+  checklist: { src: "/illustrations/checklist-v2.webp", width: 895, height: 895 },
+  listening: { src: "/illustrations/listening-v2.webp", width: 848, height: 640 },
 } as const;
 
 export type IllustrationName = keyof typeof ART;
