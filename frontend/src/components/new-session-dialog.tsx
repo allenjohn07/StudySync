@@ -106,19 +106,35 @@ function DialogBody({
   const [sessionId, setSessionId] = useState<number | null>(
     initialSessionId ?? continuable[0]?.id ?? null,
   );
+  // The "+ New subject" field. A name typed there counts as the chosen subject: starting creates it first,
+  // so a session is never filed as Unsorted just because the ✓ wasn't pressed.
+  const [draft, setDraft] = useState<{ adding: boolean; name: string }>({ adding: subjects.length === 0, name: "" });
+  const [subjectError, setSubjectError] = useState<string | null>(null);
+  const createSubject = useCreateSubject();
+  const draftName = draft.adding ? draft.name.trim() : "";
 
-  const canStart = mode === "new" || sessionId !== null;
+  const canStart = (mode === "new" || sessionId !== null) && !createSubject.isPending;
 
-  function submit(e?: React.FormEvent) {
+  async function submit(e?: React.FormEvent) {
     e?.preventDefault();
     if (!canStart) return;
-    if (mode === "new") {
-      if (subjectId === null) localStorage.removeItem(LAST_SUBJECT_KEY);
-      else localStorage.setItem(LAST_SUBJECT_KEY, String(subjectId));
-      onStart({ mode: "new", subjectId, title: title.trim() });
-    } else if (sessionId !== null) {
-      onStart({ mode: "continue", id: sessionId });
+    if (mode === "continue") {
+      if (sessionId !== null) onStart({ mode: "continue", id: sessionId });
+      return;
     }
+    let chosen = subjectId;
+    if (draftName) {
+      setSubjectError(null);
+      try {
+        chosen = (await createSubject.mutateAsync({ name: draftName })).id;
+      } catch (err) {
+        setSubjectError(err instanceof ApiError ? err.message : "Couldn't add the subject.");
+        return;
+      }
+    }
+    if (chosen === null) localStorage.removeItem(LAST_SUBJECT_KEY);
+    else localStorage.setItem(LAST_SUBJECT_KEY, String(chosen));
+    onStart({ mode: "new", subjectId: chosen, title: title.trim() });
   }
 
   return (
@@ -147,6 +163,11 @@ function DialogBody({
             onSubjectChange={setSubjectId}
             title={title}
             onTitleChange={setTitle}
+            draft={draft}
+            onDraftChange={setDraft}
+            createSubject={createSubject}
+            error={subjectError}
+            onError={setSubjectError}
           />
         ) : (
           <ContinueFields
@@ -235,44 +256,57 @@ function NewSessionFields({
   onSubjectChange,
   title,
   onTitleChange,
+  draft,
+  onDraftChange,
+  createSubject,
+  error,
+  onError,
 }: {
   subjects: Subject[];
   subjectId: number | null;
   onSubjectChange: (id: number | null) => void;
   title: string;
   onTitleChange: (title: string) => void;
+  draft: { adding: boolean; name: string };
+  onDraftChange: (draft: { adding: boolean; name: string }) => void;
+  createSubject: ReturnType<typeof useCreateSubject>;
+  error: string | null;
+  onError: (error: string | null) => void;
 }) {
-  const createSubject = useCreateSubject();
-  const [adding, setAdding] = useState(subjects.length === 0);
-  const [name, setName] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const { adding, name } = draft;
+  const setAdding = (value: boolean) => onDraftChange({ adding: value, name: value ? name : "" });
+  const setName = (value: string) => onDraftChange({ adding: true, name: value });
+  // while a new subject name is typed, it is the selection
+  const draftActive = adding && name.trim() !== "";
 
   function addSubject() {
     const trimmed = name.trim();
     if (!trimmed) return setAdding(false);
-    setError(null);
+    onError(null);
     createSubject.mutate(
       { name: trimmed },
       {
         onSuccess: (subject) => {
           onSubjectChange(subject.id);
-          setName("");
-          setAdding(false);
+          onDraftChange({ adding: false, name: "" });
         },
-        onError: (err) => setError(err instanceof ApiError ? err.message : "Couldn't add the subject."),
+        onError: (err) => onError(err instanceof ApiError ? err.message : "Couldn't add the subject."),
       },
     );
   }
 
   const option = (id: number | null, label: React.ReactNode, dot: string) => {
-    const selected = subjectId === id;
+    const selected = !draftActive && subjectId === id;
     return (
       <button
         key={id ?? "unsorted"}
         type="button"
         role="radio"
         aria-checked={selected}
-        onClick={() => onSubjectChange(id)}
+        onClick={() => {
+          onSubjectChange(id);
+          if (draftActive) onDraftChange({ adding: false, name: "" });
+        }}
         className={cn(
           chip,
           selected
@@ -330,7 +364,15 @@ function NewSessionFields({
             </button>
           )}
         </div>
-        {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
+        {error ? (
+          <p className="mt-2 text-xs text-destructive">{error}</p>
+        ) : (
+          draftActive && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              &ldquo;{name.trim()}&rdquo; is added as a new subject when you start.
+            </p>
+          )
+        )}
       </div>
 
       <div>

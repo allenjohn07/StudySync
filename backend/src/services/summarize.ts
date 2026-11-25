@@ -1,9 +1,12 @@
 import { z } from "zod";
+import { resolveDueDate } from "./dates.js";
 
 export const summarySchema = z.object({
   topics: z.array(z.string()),
   keyPoints: z.array(z.string()),
-  assignments: z.array(z.object({ title: z.string(), dueDate: z.string().nullable() })),
+  // dueText: the speaker's own words for the deadline ("next Wednesday"); dueDate is worked out from it in code
+  // (see services/dates.ts), falling back to the model's own guess only when the words can't be read as a date.
+  assignments: z.array(z.object({ title: z.string(), dueText: z.string().nullable(), dueDate: z.string().nullable() })),
   tasks: z.array(z.string()),
   studyTip: z.string(),
 });
@@ -54,8 +57,15 @@ function exampleMessages(friday: string) {
         "The speaker says the essay is due this Friday.",
         "The speaker asks the listeners to read chapter 8 before the quiz.",
       ],
-      assignments: [{ title: "Essay", dueDate: friday }],
+      assignments: [{ title: "Essay", dueText: "this Friday", dueDate: friday }],
       tasks: ["Read chapter 8 before the quiz"],
+      studyTip: "",
+    }),
+    ...ex("Problem set three is due next Wednesday.", {
+      topics: ["Problem set 3"],
+      keyPoints: ["The speaker says problem set three is due next Wednesday."],
+      assignments: [{ title: "Problem set 3", dueText: "next Wednesday", dueDate: resolveDueDate("next Wednesday") }],
+      tasks: [],
       studyTip: "",
     }),
     ...ex("The mitochondria is the powerhouse of the cell. A good way to study this is to draw the cell and label it.", {
@@ -101,8 +111,9 @@ async function callOllama(transcript: string, signal?: AbortSignal): Promise<unk
             "report just that. A topic is a short name (a few words). " +
             "Stay consistent: if a key point says something is due, it must also be listed in assignments; if a key point asks the listeners " +
             "to do something, it must also be listed in tasks. " +
-            "Return assignments the speaker mentioned (title as the speaker named it; dueDate as YYYY-MM-DD copied from the date " +
-            "list above, or null if unclear), and tasks, meaning things the speaker explicitly told the listeners to do, " +
+            "Return assignments the speaker mentioned: title as the speaker named it; dueText as the exact words the speaker used " +
+            "for the deadline (e.g. \"next Wednesday\", \"tomorrow\", \"December 3rd\"), or null if no deadline was given; " +
+            "dueDate as YYYY-MM-DD from the date list above, or null if unclear. Also return tasks, meaning things the speaker explicitly told the listeners to do, " +
             "but only if the transcript actually says them. Otherwise use an empty array. " +
             "Give a studyTip only if the speaker themself gave advice on how to study or prepare, reported in the third person " +
             "(never repeat a task or assignment as a tip); otherwise an empty string. Do not invent anything that is not in the transcript: no examples, no background, no extra detail.",
@@ -117,12 +128,20 @@ async function callOllama(transcript: string, signal?: AbortSignal): Promise<unk
   return JSON.parse(body.message?.content ?? "");
 }
 
+/** Replaces each due date with the one computed from the speaker's words, when they can be read as a date. */
+function withResolvedDates(summary: Summary): Summary {
+  return {
+    ...summary,
+    assignments: summary.assignments.map((a) => ({ ...a, dueDate: resolveDueDate(a.dueText) ?? a.dueDate })),
+  };
+}
+
 /** `signal` lets the caller cancel a summary that is no longer wanted (e.g. the user pressed "Try again"). */
 export async function summarize(transcript: string, signal?: AbortSignal): Promise<Summary> {
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const summary = summarySchema.parse(await callOllama(transcript, signal));
+      const summary = withResolvedDates(summarySchema.parse(await callOllama(transcript, signal)));
       // A real sentence should always yield something; an all-empty answer is the model giving up, so retry.
       if (wordCount(transcript) >= 3 && !summary.topics.length && !summary.keyPoints.length) {
         throw new Error("The model returned no topics or key points");
